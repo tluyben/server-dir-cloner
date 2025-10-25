@@ -10,11 +10,13 @@ describe('Products API', () => {
 
   describe('GET /api/products', () => {
     beforeEach(async () => {
-      await db.insert(products).values([
-        testData.product({ sku: 'PROD-1', price: 50, category: 'Electronics', active: true }),
-        testData.product({ sku: 'PROD-2', price: 150, category: 'Gadgets', active: true }),
-        testData.product({ sku: 'PROD-3', price: 200, category: 'Electronics', active: false }),
-      ]);
+      await db
+        .insert(products)
+        .values([
+          testData.product({ sku: 'PROD-1', price: 50, category: 'Electronics', active: true }),
+          testData.product({ sku: 'PROD-2', price: 150, category: 'Gadgets', active: true }),
+          testData.product({ sku: 'PROD-3', price: 200, category: 'Electronics', active: false }),
+        ]);
     });
 
     it('should return all products', async () => {
@@ -49,9 +51,9 @@ describe('Products API', () => {
     });
 
     it('should search by name', async () => {
-      await db.insert(products).values(
-        testData.product({ sku: 'SEARCH-1', name: 'Special Widget' }),
-      );
+      await db
+        .insert(products)
+        .values(testData.product({ sku: 'SEARCH-1', name: 'Special Widget' }));
 
       const response = await request(app).get('/api/products?search=Widget');
 

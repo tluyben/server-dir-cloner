@@ -1,4 +1,5 @@
 # Product Requirements Document (PRD)
+
 ## Bi-Directional Directory Synchronization Server
 
 **Version:** 1.0
@@ -10,9 +11,11 @@
 ## 1. Executive Summary
 
 ### 1.1 Product Vision
+
 Build a distributed server application that can be installed on multiple Linux servers and automatically synchronizes directory changes in real-time. When a directory is registered for synchronization, any changes (create, update, delete) on one server are instantly mirrored to all connected servers.
 
 ### 1.2 Key Capabilities
+
 - **Bi-directional sync**: Changes flow in both directions between servers
 - **Real-time monitoring**: Filesystem watchers detect changes instantly
 - **Conflict-free**: First sync establishes a leader (source server) for initial state
@@ -27,35 +30,39 @@ Build a distributed server application that can be installed on multiple Linux s
 ### 2.1 Primary User Stories
 
 **US-01: Register Directory for Sync**
-*As a system administrator, I want to register a directory for synchronization with another server, so that changes are automatically mirrored.*
+_As a system administrator, I want to register a directory for synchronization with another server, so that changes are automatically mirrored._
 
 **Acceptance Criteria:**
+
 - Can POST to `/api/sync/add` with directory path and target servers
 - Server automatically creates bi-directional relationship
 - Initial sync copies all files from source (leader) to target
 - Returns success with sync configuration details
 
 **US-02: Real-time File Synchronization**
-*As a user, when I create/modify/delete a file in a synced directory, I want it automatically replicated to all connected servers.*
+_As a user, when I create/modify/delete a file in a synced directory, I want it automatically replicated to all connected servers._
 
 **Acceptance Criteria:**
+
 - File creation triggers immediate replication
 - File updates are detected and synced
 - File deletions are mirrored (with safety checks)
 - Subdirectory operations work recursively
 
 **US-03: View Sync Status**
-*As an administrator, I want to view all active sync relationships and their status.*
+_As an administrator, I want to view all active sync relationships and their status._
 
 **Acceptance Criteria:**
+
 - GET `/api/sync` returns all active sync configurations
 - Shows last sync time, error count, and status
 - Can filter by directory or server
 
 **US-04: Audit Trail**
-*As a compliance officer, I want to see a complete log of all sync operations.*
+_As a compliance officer, I want to see a complete log of all sync operations._
 
 **Acceptance Criteria:**
+
 - All operations logged with timestamp, path, action, and result
 - Can query logs by date range, directory, or action type
 - Logs persist in SQLite database
@@ -103,6 +110,7 @@ Build a distributed server application that can be installed on multiple Linux s
 #### 3.2.1 Database Schema (SQLite)
 
 **servers**
+
 - `id`: INTEGER PRIMARY KEY
 - `server_id`: TEXT UNIQUE - unique identifier for this server instance
 - `name`: TEXT - friendly name
@@ -114,6 +122,7 @@ Build a distributed server application that can be installed on multiple Linux s
 - `updated_at`: DATETIME
 
 **sync_directories**
+
 - `id`: INTEGER PRIMARY KEY
 - `local_path`: TEXT - absolute path on this server
 - `remote_server_id`: INTEGER FK → servers.id
@@ -128,6 +137,7 @@ Build a distributed server application that can be installed on multiple Linux s
 - UNIQUE(local_path, remote_server_id)
 
 **sync_logs**
+
 - `id`: INTEGER PRIMARY KEY
 - `sync_dir_id`: INTEGER FK → sync_directories.id
 - `action`: TEXT - 'create' | 'update' | 'delete' | 'mkdir' | 'rmdir'
@@ -141,6 +151,7 @@ Build a distributed server application that can be installed on multiple Linux s
 - `processing_time_ms`: INTEGER
 
 **sync_queue**
+
 - `id`: INTEGER PRIMARY KEY
 - `sync_dir_id`: INTEGER FK → sync_directories.id
 - `action`: TEXT
@@ -158,6 +169,7 @@ Build a distributed server application that can be installed on multiple Linux s
 **Technology:** `chokidar` npm package
 
 **Features:**
+
 - Recursive directory watching
 - Debouncing for rapid changes
 - Ignore patterns (.git, node_modules, etc.)
@@ -165,6 +177,7 @@ Build a distributed server application that can be installed on multiple Linux s
 - Cross-platform compatibility
 
 **Events Monitored:**
+
 - `add`: New file created
 - `change`: File modified
 - `unlink`: File deleted
@@ -174,6 +187,7 @@ Build a distributed server application that can be installed on multiple Linux s
 #### 3.2.3 Sync Engine
 
 **Responsibilities:**
+
 1. Initial directory sync (leader → target)
 2. Queue management for sync operations
 3. Retry logic with exponential backoff
@@ -182,6 +196,7 @@ Build a distributed server application that can be installed on multiple Linux s
 6. Network error handling
 
 **Sync Algorithm:**
+
 ```
 1. Detect change via filesystem watcher
 2. Check if path is within a synced directory
@@ -196,6 +211,7 @@ Build a distributed server application that can be installed on multiple Linux s
 ```
 
 **Initial Sync Algorithm:**
+
 ```
 1. Leader reads entire directory tree
 2. For each file/directory:
@@ -225,6 +241,7 @@ All inter-server communication requires authentication.
 **POST /api/sync/add**
 
 **Request Body:**
+
 ```json
 {
   "directory": "/home/xxx/bla/bla",
@@ -233,6 +250,7 @@ All inter-server communication requires authentication.
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "id": 1,
@@ -253,6 +271,7 @@ All inter-server communication requires authentication.
 ```
 
 **Behavior:**
+
 1. Validate directory exists and is accessible
 2. Create sync_directories record with is_leader=true
 3. POST to target server: `/api/sync/register`
@@ -269,6 +288,7 @@ All inter-server communication requires authentication.
 Called automatically by the initiating server.
 
 **Request Body:**
+
 ```json
 {
   "directory": "/home/xxx/bla/bla",
@@ -279,6 +299,7 @@ Called automatically by the initiating server.
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "id": 2,
@@ -288,6 +309,7 @@ Called automatically by the initiating server.
 ```
 
 **Behavior:**
+
 1. Create sync_directories record with is_leader=false
 2. Create directory if doesn't exist
 3. Return ready status
@@ -301,6 +323,7 @@ Called automatically by the initiating server.
 **POST /api/sync/operation**
 
 **Request Body (multipart/form-data for files):**
+
 ```json
 {
   "syncDirId": 1,
@@ -313,6 +336,7 @@ Called automatically by the initiating server.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "success": true,
@@ -324,6 +348,7 @@ Called automatically by the initiating server.
 ```
 
 **Error Response (409 Conflict):**
+
 ```json
 {
   "error": {
@@ -344,10 +369,12 @@ Called automatically by the initiating server.
 **GET /api/sync**
 
 **Query Parameters:**
+
 - `status`: Filter by status (active|paused|error)
 - `serverId`: Filter by remote server
 
 **Response (200 OK):**
+
 ```json
 [
   {
@@ -376,6 +403,7 @@ Called automatically by the initiating server.
 **GET /api/sync/:id**
 
 **Response (200 OK):**
+
 ```json
 {
   "id": 1,
@@ -419,6 +447,7 @@ Called automatically by the initiating server.
 **PATCH /api/sync/:id/status**
 
 **Request Body:**
+
 ```json
 {
   "status": "paused|active"
@@ -426,6 +455,7 @@ Called automatically by the initiating server.
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "id": 1,
@@ -441,11 +471,13 @@ Called automatically by the initiating server.
 **DELETE /api/sync/:id**
 
 **Query Parameters:**
+
 - `deleteFiles`: boolean (default: false) - whether to delete files
 
 **Response (204 No Content)**
 
 **Behavior:**
+
 1. Stop filesystem watcher
 2. Mark sync_directory as deleted
 3. Notify remote server to remove sync
@@ -458,6 +490,7 @@ Called automatically by the initiating server.
 **GET /api/sync/:id/logs**
 
 **Query Parameters:**
+
 - `action`: Filter by action type
 - `status`: Filter by status
 - `startDate`: ISO 8601 date
@@ -466,6 +499,7 @@ Called automatically by the initiating server.
 - `offset`: Pagination offset
 
 **Response (200 OK):**
+
 ```json
 {
   "total": 1234,
@@ -494,6 +528,7 @@ Called automatically by the initiating server.
 **GET /api/sync/health**
 
 **Response (200 OK):**
+
 ```json
 {
   "status": "healthy",
@@ -519,6 +554,7 @@ Called automatically by the initiating server.
 #### 4.2.10 Manage Servers
 
 **POST /api/servers**
+
 ```json
 {
   "name": "serverB",
@@ -544,11 +580,11 @@ Remove server (must have no active syncs)
 
 ```json
 {
-  "chokidar": "^4.0.0",          // Filesystem watching
-  "axios": "^1.7.0",              // HTTP client for inter-server communication
-  "multer": "^1.4.5-lts.1",       // File upload handling
-  "node-cron": "^3.0.3",          // Scheduled tasks (health checks, retry queue)
-  "xxhash-addon": "^2.0.0"        // Fast checksums (alternative: built-in crypto)
+  "chokidar": "^4.0.0", // Filesystem watching
+  "axios": "^1.7.0", // HTTP client for inter-server communication
+  "multer": "^1.4.5-lts.1", // File upload handling
+  "node-cron": "^3.0.3", // Scheduled tasks (health checks, retry queue)
+  "xxhash-addon": "^2.0.0" // Fast checksums (alternative: built-in crypto)
 }
 ```
 
@@ -581,18 +617,21 @@ src/
 ### 5.3 Implementation Phases
 
 #### Phase 1: Database & Core Models (Week 1)
+
 - [ ] Add new database schemas
 - [ ] Generate and run migrations
 - [ ] Create TypeScript types
 - [ ] Write database seed data for testing
 
 #### Phase 2: Server Management (Week 1)
+
 - [ ] Implement server registration endpoints
 - [ ] API key authentication middleware
 - [ ] Server health check endpoints
 - [ ] Tests for server management
 
 #### Phase 3: Sync Directory Registration (Week 2)
+
 - [ ] POST /api/sync/add endpoint
 - [ ] POST /api/sync/register endpoint
 - [ ] Path validation and sanitization
@@ -600,6 +639,7 @@ src/
 - [ ] Tests for sync registration
 
 #### Phase 4: Filesystem Watcher (Week 2-3)
+
 - [ ] Integrate chokidar
 - [ ] Watch registered directories
 - [ ] Debounce rapid changes
@@ -607,6 +647,7 @@ src/
 - [ ] Tests for watcher service
 
 #### Phase 5: Sync Engine (Week 3-4)
+
 - [ ] Queue management
 - [ ] File transfer logic (upload/download)
 - [ ] Checksum calculation and validation
@@ -615,6 +656,7 @@ src/
 - [ ] Tests for sync operations
 
 #### Phase 6: Queue Processor (Week 4)
+
 - [ ] Background queue processor
 - [ ] Retry logic with exponential backoff
 - [ ] Error handling and logging
@@ -622,6 +664,7 @@ src/
 - [ ] Tests for queue processor
 
 #### Phase 7: Logging & Monitoring (Week 5)
+
 - [ ] Comprehensive sync_logs storage
 - [ ] GET /api/sync/:id/logs endpoint
 - [ ] Performance metrics
@@ -629,6 +672,7 @@ src/
 - [ ] Tests for logging
 
 #### Phase 8: Error Handling & Edge Cases (Week 5-6)
+
 - [ ] Network failure handling
 - [ ] Disk full scenarios
 - [ ] Permission errors
@@ -637,6 +681,7 @@ src/
 - [ ] Tests for error scenarios
 
 #### Phase 9: Documentation & Deployment (Week 6)
+
 - [ ] API documentation (OpenAPI/Swagger)
 - [ ] Deployment guide for Linux
 - [ ] Docker support
@@ -763,29 +808,34 @@ Both servers have new-file.txt
 ## 7. Security Considerations
 
 ### 7.1 Authentication
+
 - API keys for inter-server communication
 - Keys stored securely in environment variables
 - Rotate keys periodically
 - Rate limiting on all endpoints
 
 ### 7.2 Path Validation
+
 - Whitelist allowed base directories
 - Prevent path traversal attacks (`../../../etc/passwd`)
 - Validate paths are within allowed zones
 - Reject symbolic links outside sync directories
 
 ### 7.3 File Size Limits
+
 - Configure max file size (default: 100MB)
 - Stream large files instead of loading into memory
 - Disk space checks before writing files
 
 ### 7.4 Network Security
+
 - HTTPS for production deployments
 - Certificate validation
 - Timeout configurations
 - Request size limits
 
 ### 7.5 Data Integrity
+
 - Checksum verification on all transfers
 - Transaction-based database operations
 - File write atomicity (write to temp, then rename)
@@ -795,6 +845,7 @@ Both servers have new-file.txt
 ## 8. Performance Considerations
 
 ### 8.1 Optimization Strategies
+
 - Debounce filesystem events (e.g., 100ms)
 - Batch small file operations
 - Use rsync-style algorithms for large files
@@ -802,12 +853,14 @@ Both servers have new-file.txt
 - Connection pooling for HTTP requests
 
 ### 8.2 Scalability
+
 - Queue-based architecture for horizontal scaling
 - Separate watcher and sync processes
 - Database indexing on frequently queried fields
 - Archive old logs to separate table
 
 ### 8.3 Resource Management
+
 - Limit concurrent sync operations (e.g., 5 max)
 - Memory limits for file buffers
 - Graceful degradation under load
@@ -818,24 +871,28 @@ Both servers have new-file.txt
 ## 9. Testing Strategy
 
 ### 9.1 Unit Tests
+
 - Path validation functions
 - Checksum calculation
 - Queue management
 - API endpoint handlers
 
 ### 9.2 Integration Tests
+
 - Two-server sync simulation
 - File operation scenarios (CRUD)
 - Network failure recovery
 - Conflict resolution
 
 ### 9.3 End-to-End Tests
+
 - Full sync lifecycle
 - Multi-file operations
 - Large file transfers
 - Long-running sync stability
 
 ### 9.4 Test Scenarios
+
 1. Create file on A → appears on B
 2. Update file on B → updates on A
 3. Delete file on A → deletes on B
@@ -850,6 +907,7 @@ Both servers have new-file.txt
 ## 10. Monitoring & Observability
 
 ### 10.1 Metrics to Track
+
 - Sync operations per second
 - Queue depth
 - Error rate by type
@@ -858,12 +916,14 @@ Both servers have new-file.txt
 - Disk space usage
 
 ### 10.2 Logging
+
 - Structured JSON logs
 - Log levels: DEBUG, INFO, WARN, ERROR
 - Correlation IDs for tracking operations across servers
 - Rotation and archival policies
 
 ### 10.3 Health Checks
+
 - Periodic ping between servers
 - Filesystem accessibility checks
 - Database connectivity
@@ -906,6 +966,7 @@ LOG_RETENTION_DAYS=90
 ### 11.2 Runtime Configuration (Database)
 
 Store dynamic configuration in database:
+
 - Allowed sync directories
 - Ignore patterns (.gitignore style)
 - Per-directory sync settings
@@ -947,6 +1008,7 @@ sudo systemctl start directory-cloner
 ### 12.2 Multi-Server Setup
 
 **On ServerA:**
+
 ```bash
 export SERVER_ID=server-a
 export SERVER_NAME=serverA
@@ -955,6 +1017,7 @@ npm start
 ```
 
 **On ServerB:**
+
 ```bash
 export SERVER_ID=server-b
 export SERVER_NAME=serverB
@@ -963,6 +1026,7 @@ npm start
 ```
 
 **Register servers:**
+
 ```bash
 # On ServerA, register ServerB
 curl -X POST http://serverA:3000/api/servers \
@@ -984,6 +1048,7 @@ curl -X POST http://serverB:3000/api/servers \
 ```
 
 **Start syncing:**
+
 ```bash
 # From ServerA
 curl -X POST http://serverA:3000/api/sync/add \
@@ -1000,6 +1065,7 @@ curl -X POST http://serverA:3000/api/sync/add \
 ## 13. Future Enhancements (Out of Scope for v1.0)
 
 ### 13.1 Potential Features
+
 - **Multi-target sync**: Sync one directory to 3+ servers
 - **Partial sync**: Sync only specific file patterns
 - **Bandwidth throttling**: Limit sync speed
@@ -1012,6 +1078,7 @@ curl -X POST http://serverA:3000/api/sync/add \
 - **Scheduling**: Define sync windows (e.g., off-peak hours)
 
 ### 13.2 Advanced Features
+
 - **Chain sync**: A ↔ B ↔ C (prevent circular loops)
 - **Version control**: Keep file history
 - **Selective sync**: User-defined filters
@@ -1023,6 +1090,7 @@ curl -X POST http://serverA:3000/api/sync/add \
 ## 14. Success Criteria
 
 ### 14.1 Functional Requirements Met
+
 - ✅ Can register directory for bi-directional sync
 - ✅ Changes propagate in <1 second (on local network)
 - ✅ All CRUD operations (create, read, update, delete) work
@@ -1032,6 +1100,7 @@ curl -X POST http://serverA:3000/api/sync/add \
 - ✅ Restarts resume syncing automatically
 
 ### 14.2 Non-Functional Requirements
+
 - ✅ 99.9% sync success rate under normal conditions
 - ✅ Handles 1000+ files in a directory
 - ✅ Works with files up to 100MB
@@ -1043,15 +1112,15 @@ curl -X POST http://serverA:3000/api/sync/add \
 
 ## 15. Risks & Mitigations
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| Network partition | High | Medium | Queue operations, retry on reconnect |
-| Concurrent modifications | Medium | High | Last-write-wins with conflict logging |
-| Disk full | High | Low | Pre-check disk space, alert on threshold |
-| Large file transfers timeout | Medium | Medium | Streaming, chunked transfer, resume support |
-| Circular sync loops | High | Low | Track operation IDs, prevent echo |
-| Database corruption | High | Very Low | WAL mode, regular backups, transactions |
-| Symlink attacks | High | Low | Path validation, whitelist directories |
+| Risk                         | Impact | Probability | Mitigation                                  |
+| ---------------------------- | ------ | ----------- | ------------------------------------------- |
+| Network partition            | High   | Medium      | Queue operations, retry on reconnect        |
+| Concurrent modifications     | Medium | High        | Last-write-wins with conflict logging       |
+| Disk full                    | High   | Low         | Pre-check disk space, alert on threshold    |
+| Large file transfers timeout | Medium | Medium      | Streaming, chunked transfer, resume support |
+| Circular sync loops          | High   | Low         | Track operation IDs, prevent echo           |
+| Database corruption          | High   | Very Low    | WAL mode, regular backups, transactions     |
+| Symlink attacks              | High   | Low         | Path validation, whitelist directories      |
 
 ---
 
@@ -1073,6 +1142,7 @@ curl -X POST http://serverA:3000/api/sync/add \
 ### 17.1 Example curl Commands
 
 **Register sync directory:**
+
 ```bash
 curl -X POST http://localhost:3000/api/sync/add \
   -H "Content-Type: application/json" \
@@ -1084,18 +1154,21 @@ curl -X POST http://localhost:3000/api/sync/add \
 ```
 
 **List all syncs:**
+
 ```bash
 curl http://localhost:3000/api/sync \
   -H "X-API-Key: your-api-key"
 ```
 
 **Get sync logs:**
+
 ```bash
 curl "http://localhost:3000/api/sync/1/logs?limit=50&action=update" \
   -H "X-API-Key: your-api-key"
 ```
 
 **Pause sync:**
+
 ```bash
 curl -X PATCH http://localhost:3000/api/sync/1/status \
   -H "Content-Type: application/json" \

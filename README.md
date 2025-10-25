@@ -219,10 +219,8 @@ describe('API Endpoint', () => {
   const app = createApp();
 
   it('should perform expected behavior', async () => {
-    const response = await request(app)
-      .get('/api/endpoint')
-      .expect(200);
-    
+    const response = await request(app).get('/api/endpoint').expect(200);
+
     expect(response.body).toHaveProperty('expected');
   });
 });

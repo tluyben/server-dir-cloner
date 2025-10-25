@@ -18,10 +18,12 @@ describe('Users API', () => {
 
     it('should return all users', async () => {
       // Insert test users
-      await db.insert(users).values([
-        testData.user({ email: 'user1@test.com', name: 'User 1' }),
-        testData.user({ email: 'user2@test.com', name: 'User 2' }),
-      ]);
+      await db
+        .insert(users)
+        .values([
+          testData.user({ email: 'user1@test.com', name: 'User 1' }),
+          testData.user({ email: 'user2@test.com', name: 'User 2' }),
+        ]);
 
       const response = await request(app).get('/api/users');
 
@@ -108,9 +110,7 @@ describe('Users API', () => {
     });
 
     it('should return 404 for non-existent user', async () => {
-      const response = await request(app)
-        .put('/api/users/999')
-        .send({ name: 'Updated Name' });
+      const response = await request(app).put('/api/users/999').send({ name: 'Updated Name' });
 
       expect(response.status).toBe(404);
       expect(response.body.error.message).toBe('User not found');

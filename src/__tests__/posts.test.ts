@@ -17,10 +17,12 @@ describe('Posts API', () => {
 
   describe('GET /api/posts', () => {
     it('should return all posts with author info', async () => {
-      await db.insert(posts).values([
-        testData.post(testUserId, { slug: 'post-1', published: true }),
-        testData.post(testUserId, { slug: 'post-2', published: false }),
-      ]);
+      await db
+        .insert(posts)
+        .values([
+          testData.post(testUserId, { slug: 'post-1', published: true }),
+          testData.post(testUserId, { slug: 'post-2', published: false }),
+        ]);
 
       const response = await request(app).get('/api/posts');
 
@@ -32,10 +34,12 @@ describe('Posts API', () => {
     });
 
     it('should filter by published status', async () => {
-      await db.insert(posts).values([
-        testData.post(testUserId, { slug: 'published', published: true }),
-        testData.post(testUserId, { slug: 'draft', published: false }),
-      ]);
+      await db
+        .insert(posts)
+        .values([
+          testData.post(testUserId, { slug: 'published', published: true }),
+          testData.post(testUserId, { slug: 'draft', published: false }),
+        ]);
 
       const response = await request(app).get('/api/posts?published=true');
 
@@ -66,7 +70,7 @@ describe('Posts API', () => {
 
   describe('GET /api/posts/slug/:slug', () => {
     it('should return post by slug', async () => {
-      const [post] = await db
+      await db
         .insert(posts)
         .values(testData.post(testUserId, { slug: 'unique-slug' }))
         .returning();

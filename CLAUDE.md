@@ -207,12 +207,14 @@ curl "http://localhost:3000/api/products?active=true&minPrice=10&maxPrice=100"
 ## Testing
 
 ### Test Structure
+
 - Tests are in `src/__tests__/` directory
 - Test setup in `src/test/setup.ts`
 - Test utilities in `src/test/utils.ts`
 - Separate test database (`test.db`) is used
 
 ### Writing Tests
+
 ```typescript
 // Import from @jest/globals for ESM
 import { describe, it, expect, beforeEach } from '@jest/globals';
@@ -221,18 +223,17 @@ import { createApp } from '../app.js';
 
 describe('Feature', () => {
   const app = createApp();
-  
+
   it('should test behavior', async () => {
-    const response = await request(app)
-      .get('/api/endpoint')
-      .expect(200);
-    
+    const response = await request(app).get('/api/endpoint').expect(200);
+
     expect(response.body).toHaveProperty('field');
   });
 });
 ```
 
 ### Test Data Factories
+
 ```typescript
 import { testData } from '../test/utils.js';
 

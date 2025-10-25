@@ -59,13 +59,15 @@ describe('Validation Middleware', () => {
     });
 
     it('should accept optional published field', async () => {
-      const response = await request(app).post('/api/posts').send({
-        title: 'Title',
-        content: 'Content',
-        slug: 'unique-slug-' + Date.now(),
-        authorId: 1,
-        // published field omitted
-      });
+      const response = await request(app)
+        .post('/api/posts')
+        .send({
+          title: 'Title',
+          content: 'Content',
+          slug: 'unique-slug-' + Date.now(),
+          authorId: 1,
+          // published field omitted
+        });
 
       // Will fail with invalid author, but validation passes
       expect(response.status).toBe(400);
@@ -99,13 +101,15 @@ describe('Validation Middleware', () => {
     });
 
     it('should accept optional fields', async () => {
-      const response = await request(app).post('/api/products').send({
-        name: 'Product',
-        price: 99.99,
-        stock: 10,
-        sku: 'SKU-' + Date.now(),
-        // description, category, active omitted
-      });
+      const response = await request(app)
+        .post('/api/products')
+        .send({
+          name: 'Product',
+          price: 99.99,
+          stock: 10,
+          sku: 'SKU-' + Date.now(),
+          // description, category, active omitted
+        });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('description', null);

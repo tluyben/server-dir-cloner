@@ -17,7 +17,7 @@ export function createApp() {
   );
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  
+
   // Only add logger if not in test environment
   if (process.env.NODE_ENV !== 'test') {
     app.use(requestLogger);

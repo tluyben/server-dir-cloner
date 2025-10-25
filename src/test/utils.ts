@@ -9,14 +9,14 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../db/schema.js';
 
 // Create test app factory
-export function createTestApp(dbPath = './test.db') {
+export function createTestApp(_dbPath = './test.db') {
   const app = express();
 
   app.use(helmet());
   app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  
+
   // Disable logging in tests
   if (process.env.NODE_ENV !== 'test') {
     app.use(requestLogger);
@@ -37,8 +37,8 @@ export function createTestApp(dbPath = './test.db') {
 }
 
 // Test database helper
-export function getTestDb(dbPath = './test.db') {
-  const sqlite = new Database(dbPath);
+export function getTestDb(_dbPath = './test.db') {
+  const sqlite = new Database(_dbPath);
   sqlite.pragma('journal_mode = WAL');
   sqlite.pragma('foreign_keys = ON');
   return drizzle(sqlite, { schema });
