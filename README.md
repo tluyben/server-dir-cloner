@@ -127,6 +127,176 @@ See **[QUICK_START_API_KEYS.md](./QUICK_START_API_KEYS.md)** for a 30-second gui
 6. **Verification**: Checksums verify file integrity
 7. **Logging**: All operations logged to database
 
+## API Key Management
+
+### How API Keys Work
+
+API keys are required for all sync operations. They:
+
+1. **Authenticate servers**: Each server instance needs a unique API key
+2. **Secure communication**: All sync requests validate the API key
+3. **Track activity**: Updates `lastSeen` timestamp on each request
+4. **Enable/disable access**: Deactivate keys without deleting them
+
+### Creating Your First API Key
+
+**Option 1: Automated Script (Recommended)**
+
+```bash
+npm run create-api-key
+```
+
+This creates a server entry and generates a secure 64-character API key automatically.
+
+**Option 2: Manual Registration via API**
+
+```bash
+curl -X POST http://localhost:3000/api/servers \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "My Server",
+    "url": "http://localhost:3000"
+  }'
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "serverId": "server-1729864523456-a3x9k2",
+  "name": "My Server",
+  "url": "http://localhost:3000",
+  "apiKey": "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
+  "active": true,
+  "createdAt": "2025-10-25T12:00:00.000Z"
+}
+```
+
+**Save the `apiKey`** - you'll need it for authenticated requests.
+
+### How to Get API Keys (Various Methods)
+
+#### For Development
+
+```bash
+# Quick one-liner
+npm run create-api-key
+```
+
+#### For Production/Automation
+
+**Node.js:**
+```javascript
+import axios from 'axios';
+
+const response = await axios.post('http://localhost:3000/api/servers', {
+  name: 'Production Server',
+  url: 'http://prod-server.example.com:3000'
+});
+
+const apiKey = response.data.apiKey;
+console.log('API Key:', apiKey);
+// Store securely (environment variables, secrets manager, etc.)
+```
+
+**Python:**
+```python
+import requests
+
+response = requests.post('http://localhost:3000/api/servers', json={
+    'name': 'Production Server',
+    'url': 'http://prod-server.example.com:3000'
+})
+
+api_key = response.json()['apiKey']
+print(f'API Key: {api_key}')
+```
+
+**Shell Script (CI/CD):**
+```bash
+API_KEY=$(curl -s -X POST http://localhost:3000/api/servers \
+  -H "Content-Type: application/json" \
+  -d '{"name":"CI Server","url":"http://ci.example.com:3000"}' \
+  | jq -r '.apiKey')
+
+echo "X_API_KEY=$API_KEY" >> .env
+```
+
+### Using API Keys
+
+Include the API key in the `X-API-Key` header for all sync operations:
+
+```bash
+curl -H "X-API-Key: your-api-key-here" \
+  http://localhost:3000/api/sync/directories
+```
+
+### Managing API Keys
+
+**View all servers and their API keys:**
+```bash
+curl http://localhost:3000/api/servers
+```
+
+**View specific server:**
+```bash
+curl http://localhost:3000/api/servers/1
+```
+
+**Update API key:**
+```bash
+curl -X PUT http://localhost:3000/api/servers/1 \
+  -H "Content-Type: application/json" \
+  -d '{"apiKey": "new-key"}'
+```
+
+**Deactivate server (without deleting):**
+```bash
+curl -X PUT http://localhost:3000/api/servers/1 \
+  -H "Content-Type: application/json" \
+  -d '{"active": false}'
+```
+
+**Delete server:**
+```bash
+curl -X DELETE http://localhost:3000/api/servers/1
+```
+
+Note: Servers with active sync directories cannot be deleted.
+
+### Automated API Key Creation
+
+For management systems, containers, or CI/CD pipelines, the API provides programmatic access.
+
+**Docker Example:**
+```dockerfile
+FROM node:18
+WORKDIR /app
+COPY . .
+RUN npm install
+
+# Bootstrap script
+COPY bootstrap.sh /app/bootstrap.sh
+RUN chmod +x /app/bootstrap.sh
+
+CMD ["/app/bootstrap.sh"]
+```
+
+```bash
+#!/bin/bash
+# bootstrap.sh - Automatically register and get API key
+
+API_KEY=$(curl -s -X POST "$MANAGEMENT_API/api/servers" \
+  -H "Content-Type: application/json" \
+  -d "{\"name\":\"container-${HOSTNAME}\",\"url\":\"http://${HOSTNAME}:3000\"}" \
+  | jq -r '.apiKey')
+
+export X_API_KEY="$API_KEY"
+npm start
+```
+
+See **[API_KEY_GUIDE.md](./API_KEY_GUIDE.md)** for comprehensive documentation including Docker, Kubernetes, and advanced automation examples.
+
 ## API Endpoints
 
 ### Server Management (API Key Management)
@@ -243,108 +413,6 @@ curl http://localhost:3000/api/sync/directories \
 curl http://localhost:3000/api/sync/directories/1/logs \
   -H "X-API-Key: your-api-key-here"
 ```
-
-## API Key Management
-
-### How API Keys Work
-
-1. **Generation**: 64-character hexadecimal string using `crypto.randomBytes(32)`
-2. **Storage**: Stored in `servers` table in SQLite database
-3. **Authentication**: Validated via `X-API-Key` header
-4. **Authorization**: Only active servers with valid keys can access sync endpoints
-
-### Creating API Keys
-
-**Option 1: Auto-Generated (Recommended)**
-
-```bash
-npm run create-api-key
-```
-
-**Option 2: Manual Registration**
-
-```bash
-curl -X POST http://localhost:3000/api/servers \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "My Server",
-    "url": "http://localhost:3000"
-  }'
-```
-
-The API automatically generates a secure key if none is provided.
-
-**Option 3: Custom API Key**
-
-```bash
-curl -X POST http://localhost:3000/api/servers \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "My Server",
-    "url": "http://localhost:3000",
-    "apiKey": "your-custom-key"
-  }'
-```
-
-### Using API Keys
-
-Include the key in the `X-API-Key` header for all sync operations:
-
-```bash
-curl -H "X-API-Key: your-key-here" \
-  http://localhost:3000/api/sync/directories
-```
-
-### Managing API Keys
-
-**List all servers (with API keys):**
-```bash
-curl http://localhost:3000/api/servers
-```
-
-**Update API key:**
-```bash
-curl -X PUT http://localhost:3000/api/servers/1 \
-  -H "Content-Type: application/json" \
-  -d '{"apiKey": "new-key"}'
-```
-
-**Deactivate server:**
-```bash
-curl -X PUT http://localhost:3000/api/servers/1 \
-  -H "Content-Type: application/json" \
-  -d '{"active": false}'
-```
-
-### Automated API Key Creation
-
-For management systems, containers, or CI/CD pipelines:
-
-**Node.js Example:**
-```javascript
-import axios from 'axios';
-
-const response = await axios.post('http://localhost:3000/api/servers', {
-  name: 'Automated Server Instance',
-  url: 'http://automated-instance.example.com:3000'
-});
-
-const apiKey = response.data.apiKey;
-console.log('API Key:', apiKey);
-// Store securely (environment variables, secrets manager)
-```
-
-**Shell Script Example:**
-```bash
-API_KEY=$(curl -s -X POST http://localhost:3000/api/servers \
-  -H "Content-Type: application/json" \
-  -d '{"name":"CI Server","url":"http://ci.example.com:3000"}' \
-  | jq -r '.apiKey')
-
-echo "X_API_KEY=$API_KEY" >> .env
-```
-
-See **[API_KEY_GUIDE.md](./API_KEY_GUIDE.md)** for comprehensive API key documentation including Docker, Kubernetes, and CI/CD examples.
 
 ## Project Structure
 
