@@ -1,0 +1,66 @@
+# Production Dockerfile for Express 5.1 API
+FROM node:20-alpine AS base
+WORKDIR /app
+
+# Install dependencies needed for native modules
+RUN apk add --no-cache libc6-compat python3 make g++
+
+# Dependencies stage
+FROM base AS deps
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# Build stage
+FROM base AS builder
+COPY package*.json ./
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build TypeScript to JavaScript
+RUN npm run build
+
+# Production stage
+FROM node:20-alpine AS production
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Install runtime dependencies
+RUN apk add --no-cache libc6-compat bash
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 expressjs
+
+# Copy production dependencies
+COPY --from=deps --chown=expressjs:nodejs /app/node_modules ./node_modules
+
+# Copy built application
+COPY --from=builder --chown=expressjs:nodejs /app/dist ./dist
+COPY --from=builder --chown=expressjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=expressjs:nodejs /app/drizzle ./drizzle
+
+# Copy entrypoint script
+COPY --chown=expressjs:nodejs docker-entrypoint.prod.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.prod.sh
+
+# Create data directory (will be mounted from host)
+RUN mkdir -p /data && chown -R expressjs:nodejs /data
+
+# Switch to non-root user
+USER expressjs
+
+# Expose port
+EXPOSE 3000
+
+ENV PORT=3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))" || exit 1
+
+# Use entrypoint script
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.prod.sh"]
+CMD ["node", "dist/index.js"]

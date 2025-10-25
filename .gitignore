@@ -1,0 +1,73 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production
+dist/
+build/
+
+# Database
+content.db
+content.db-shm
+content.db-wal
+test.db
+test.db-shm
+test.db-wal
+*.db
+*.db-shm
+*.db-wal
+
+# Environment
+.env
+.env.local
+.env.production
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Drizzle
+drizzle/meta/
+.drizzle/
+
+# Misc
+.cache/
+.temp/
+tmp/
+# claude4ever directories and files
+/running_tasks/
+/complete_tasks/
+/dbackups/
+/sub_tasks/
+/tasks/pointer
+/claude4ever
+/docker-compose.claude.yml
+/test-results/
+/.running
+/.app-restarted
+/.new-admin
+/control-watcher.sh
+/test-control-files.sh

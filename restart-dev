@@ -1,0 +1,108 @@
+#!/bin/bash
+
+# restart-dev - Kill all npm dev processes and start a fresh one
+# This script is called by the LLM to ensure clean dev server state
+
+echo "=== Restarting Next.js Dev Server ==="
+echo "Time: $(date)"
+
+# Kill all existing npm run dev processes
+echo "Stopping all existing npm dev processes..."
+
+# Find and kill all npm processes running dev
+for pid in $(ps aux | grep "npm run dev" | grep -v grep | awk '{print $2}'); do
+    echo "Killing npm process: $pid"
+    kill -9 $pid 2>/dev/null || true
+done
+
+# Find and kill all next dev processes
+for pid in $(ps aux | grep "next dev" | grep -v grep | awk '{print $2}'); do
+    echo "Killing next dev process: $pid"
+    kill -9 $pid 2>/dev/null || true
+done
+
+# Find and kill all next-server processes
+for pid in $(ps aux | grep "next-server" | grep -v grep | awk '{print $2}'); do
+    echo "Killing next-server process: $pid"
+    kill -9 $pid 2>/dev/null || true
+done
+
+# Kill any node processes on ports 3000-3010 (cleanup range)
+for port in {3000..3010}; do
+    pid=$(netstat -lnp 2>/dev/null | grep ":$port.*node" | awk '{print $7}' | cut -d'/' -f1)
+    if [ -n "$pid" ]; then
+        echo "Killing process on port $port (PID: $pid)"
+        kill -9 $pid 2>/dev/null || true
+    fi
+done
+
+# Wait a moment for processes to fully terminate
+sleep 2
+
+# Clean up build directories that cause issues
+echo "Cleaning build directories..."
+if [ -d "./.next" ]; then
+    echo "Removing ./.next directory"
+    rm -rf ./.next
+fi
+if [ -d "./dist" ]; then
+    echo "Removing ./dist directory"
+    rm -rf ./dist
+fi
+
+# Verify all processes are killed
+remaining=$(ps aux | grep -E "(npm run dev|next dev|next-server)" | grep -v grep | wc -l)
+if [ "$remaining" -gt 0 ]; then
+    echo "Warning: $remaining dev processes still running"
+    ps aux | grep -E "(npm run dev|next dev|next-server)" | grep -v grep
+else
+    echo "All dev processes successfully stopped"
+fi
+
+# Start fresh npm dev server
+echo "Starting fresh npm dev server on port 3000..."
+
+# Create log directory if it doesn't exist
+if [ ! -d "/var/log" ]; then
+    mkdir -p /var/log 2>/dev/null || {
+        echo "Cannot create /var/log, using local log"
+        LOG_FILE="./next.log"
+    }
+fi
+
+LOG_FILE="${LOG_FILE:-/var/log/next.log}"
+
+# Add separator to log
+echo "" >> "$LOG_FILE"
+echo "=== Next.js Dev Server Restarted at $(date) ===" >> "$LOG_FILE"
+echo "=== Called by restart-dev script ===" >> "$LOG_FILE"
+echo "" >> "$LOG_FILE"
+
+# Start npm dev in background
+npm run dev >> "$LOG_FILE" 2>&1 &
+DEV_PID=$!
+
+echo "Started npm dev with PID: $DEV_PID"
+echo "Logging to: $LOG_FILE"
+
+# Wait a moment and verify it started
+sleep 3
+
+if kill -0 $DEV_PID 2>/dev/null; then
+    echo "✓ Dev server successfully started on port 3000"
+    
+    # Check if port 3000 is actually listening
+    if netstat -lnp 2>/dev/null | grep -q ":3000"; then
+        echo "✓ Port 3000 is listening"
+    else
+        echo "⚠ Warning: Port 3000 not yet listening, server may still be starting..."
+    fi
+else
+    echo "✗ Dev server failed to start!"
+    echo "Last 20 lines of log:"
+    tail -20 "$LOG_FILE"
+    exit 1
+fi
+
+echo "=== Restart Complete ==="
+exit 0
