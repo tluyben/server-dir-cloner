@@ -36,6 +36,17 @@ npm run dev
 
 The API will be available at `http://localhost:3000`
 
+### Getting Your First API Key
+
+To use sync features, you need an API key:
+
+```bash
+# In another terminal (while API is running)
+npm run create-api-key
+```
+
+**See [QUICK_START_API_KEYS.md](./QUICK_START_API_KEYS.md) for a 30-second guide to API keys.**
+
 ## Project Structure
 
 ```
@@ -83,6 +94,26 @@ The API will be available at `http://localhost:3000`
 ### Health Check
 
 - `GET /health` - Server health status
+
+### Servers (API Key Management)
+
+- `POST /api/servers` - Register a new server and get API key
+- `GET /api/servers` - List all registered servers
+- `GET /api/servers/:id` - Get server details
+- `PUT /api/servers/:id` - Update server configuration
+- `DELETE /api/servers/:id` - Delete server
+- `POST /api/servers/:id/ping` - Test server connection
+
+**See [API_KEY_GUIDE.md](./API_KEY_GUIDE.md) for detailed API key management instructions.**
+
+### Sync Directories (Requires API Key)
+
+- `POST /api/sync/directories` - Create sync directory
+- `GET /api/sync/directories` - List all sync directories
+- `PUT /api/sync/directories/:id` - Update sync directory
+- `DELETE /api/sync/directories/:id` - Delete sync directory
+
+**See [SYNC_GUIDE.md](./SYNC_GUIDE.md) for directory synchronization guide.**
 
 ### Users
 
