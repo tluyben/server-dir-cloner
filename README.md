@@ -1,24 +1,28 @@
 # Directory Cloner - Bi-Directional File Synchronization Server
 
-A distributed server application that automatically synchronizes directories in real-time across multiple Linux servers. When a directory is registered for synchronization, any changes (create, update, delete) on one server are instantly mirrored to all connected servers.
+A distributed server application that automatically synchronizes directories and individual files in real-time across multiple Linux servers. When a directory or file is registered for synchronization, any changes (create, update, delete) on one server are instantly mirrored to all connected servers.
 
 ## What Does This Do?
 
-**Directory Cloner** enables real-time, bi-directional file synchronization between multiple servers:
+**Directory Cloner** enables real-time, bi-directional synchronization between multiple servers:
 
-- **Automatic Sync**: File changes are detected instantly and propagated to other servers
+- **Automatic Sync**: Directory and file changes are detected instantly and propagated to other servers
 - **Bi-Directional**: Changes flow in both directions between servers
 - **Real-Time Monitoring**: Filesystem watchers detect changes as they happen
+- **Individual File Sync**: Sync specific files (e.g., `/home/user/config.json`) without syncing entire directories
+- **Smart File Monitoring**: Files don't need to exist yet - monitor parent directory and sync when file appears
 - **Resilient**: Handles network failures with automatic retry and queue management
 - **Secure**: API key authentication for all inter-server communication
 - **Auditable**: Every operation is logged to SQLite database
 
 ### Use Cases
 
-- Keep configuration files in sync across web server cluster
-- Replicate user uploads across multiple application servers
-- Maintain synchronized data directories for high availability
-- Distribute content changes to edge servers automatically
+- **Directory Sync**: Keep entire directories in sync across web server cluster
+- **File Sync**: Monitor and sync individual configuration files (e.g., `/etc/app/config.json`)
+- **User Uploads**: Replicate user uploads across multiple application servers
+- **High Availability**: Maintain synchronized data directories for high availability
+- **Log Collection**: Sync specific log files to a central server
+- **Edge Distribution**: Distribute content changes to edge servers automatically
 
 ## Quick Start
 
@@ -846,6 +850,7 @@ npm run db:studio
 - **[SCRIPTS_GUIDE.md](./SCRIPTS_GUIDE.md)** - Local administration scripts guide
 - **[QUICK_START_API_KEYS.md](./QUICK_START_API_KEYS.md)** - 30-second API key guide
 - **[API_KEY_GUIDE.md](./API_KEY_GUIDE.md)** - Comprehensive API key management
+- **[FILE_SYNC_GUIDE.md](./FILE_SYNC_GUIDE.md)** - Individual file synchronization guide
 - **[SYNC_GUIDE.md](./SYNC_GUIDE.md)** - Directory synchronization guide (if available)
 - **[CLAUDE.md](./CLAUDE.md)** - Development guide for LLMs
 - **[PRD.md](./PRD.md)** - Product requirements document

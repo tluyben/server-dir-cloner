@@ -3,6 +3,7 @@ import { usersRouter } from './users.js';
 import { postsRouter } from './posts.js';
 import { productsRouter } from './products.js';
 import { syncRouter } from './sync.js';
+import syncFilesRouter from './sync-files.js';
 import { serversRouter } from './servers.js';
 
 export const apiRouter = Router();
@@ -15,6 +16,7 @@ apiRouter.get('/', (_req, res) => {
       posts: '/api/posts',
       products: '/api/products',
       sync: '/api/sync',
+      syncFiles: '/api/sync/files',
       servers: '/api/servers',
     },
   });
@@ -23,5 +25,6 @@ apiRouter.get('/', (_req, res) => {
 apiRouter.use('/users', usersRouter);
 apiRouter.use('/posts', postsRouter);
 apiRouter.use('/products', productsRouter);
+apiRouter.use('/sync/files', syncFilesRouter); // Mount file sync routes before general sync routes
 apiRouter.use('/sync', syncRouter);
 apiRouter.use('/servers', serversRouter);

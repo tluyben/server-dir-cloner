@@ -87,9 +87,12 @@ export const syncDirectories = sqliteTable('sync_directories', {
 
 export const syncLogs = sqliteTable('sync_logs', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  syncDirId: integer('sync_dir_id')
-    .notNull()
-    .references(() => syncDirectories.id, { onDelete: 'cascade' }),
+  syncDirId: integer('sync_dir_id').references(() => syncDirectories.id, {
+    onDelete: 'cascade',
+  }),
+  syncFileId: integer('sync_file_id').references(() => syncFiles.id, {
+    onDelete: 'cascade',
+  }),
   action: text('action').notNull(), // 'create' | 'update' | 'delete' | 'mkdir' | 'rmdir'
   filePath: text('file_path').notNull(),
   direction: text('direction').notNull(), // 'outbound' | 'inbound'
@@ -103,11 +106,36 @@ export const syncLogs = sqliteTable('sync_logs', {
   processingTimeMs: integer('processing_time_ms'),
 });
 
+export const syncFiles = sqliteTable('sync_files', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  filePath: text('file_path').notNull(), // Absolute path to the file
+  remoteServerId: integer('remote_server_id')
+    .notNull()
+    .references(() => servers.id, { onDelete: 'cascade' }),
+  remoteFilePath: text('remote_file_path').notNull(),
+  isLeader: integer('is_leader', { mode: 'boolean' }).notNull().default(false),
+  syncDirection: text('sync_direction').notNull().default('bidirectional'), // 'bidirectional' | 'send' | 'receive'
+  status: text('status').notNull().default('active'), // 'active' | 'paused' | 'error'
+  fileExists: integer('file_exists', { mode: 'boolean' }).notNull().default(false), // Whether the file currently exists
+  parentDirectory: text('parent_directory').notNull(), // Directory to watch
+  lastSyncAt: text('last_sync_at'),
+  errorCount: integer('error_count').notNull().default(0),
+  createdAt: text('created_at')
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text('updated_at')
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
 export const syncQueue = sqliteTable('sync_queue', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  syncDirId: integer('sync_dir_id')
-    .notNull()
-    .references(() => syncDirectories.id, { onDelete: 'cascade' }),
+  syncDirId: integer('sync_dir_id').references(() => syncDirectories.id, {
+    onDelete: 'cascade',
+  }),
+  syncFileId: integer('sync_file_id').references(() => syncFiles.id, {
+    onDelete: 'cascade',
+  }),
   action: text('action').notNull(),
   filePath: text('file_path').notNull(),
   priority: integer('priority').notNull().default(5),
@@ -134,6 +162,8 @@ export type Server = typeof servers.$inferSelect;
 export type NewServer = typeof servers.$inferInsert;
 export type SyncDirectory = typeof syncDirectories.$inferSelect;
 export type NewSyncDirectory = typeof syncDirectories.$inferInsert;
+export type SyncFile = typeof syncFiles.$inferSelect;
+export type NewSyncFile = typeof syncFiles.$inferInsert;
 export type SyncLog = typeof syncLogs.$inferSelect;
 export type NewSyncLog = typeof syncLogs.$inferInsert;
 export type SyncQueueItem = typeof syncQueue.$inferSelect;

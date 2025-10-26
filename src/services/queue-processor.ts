@@ -1,5 +1,5 @@
 import * as cron from 'node-cron';
-import { db, syncQueue, syncDirectories } from '../db/index.js';
+import { db, syncQueue, syncDirectories, syncFiles } from '../db/index.js';
 import { eq, and, lt } from 'drizzle-orm';
 import { syncEngine } from './sync-engine.js';
 import type { SyncQueueItem } from '../db/index.js';
@@ -115,28 +115,56 @@ export class QueueProcessor {
         })
         .where(eq(syncQueue.id, item.id));
 
-      // Check if sync directory is active
-      const [syncDir] = await db
-        .select()
-        .from(syncDirectories)
-        .where(eq(syncDirectories.id, item.syncDirId))
-        .limit(1);
+      // Determine if this is a directory or file sync
+      const isFileSync = item.syncFileId !== null;
 
-      if (!syncDir || syncDir.status !== 'active') {
-        console.log(`Sync directory ${item.syncDirId} is not active, skipping`);
-        await db
-          .update(syncQueue)
-          .set({
-            status: 'failed',
-            errorMessage: 'Sync directory is not active',
-            updatedAt: new Date().toISOString(),
-          })
-          .where(eq(syncQueue.id, item.id));
-        return;
+      if (isFileSync) {
+        // File sync - check if sync file is active
+        const [syncFile] = await db
+          .select()
+          .from(syncFiles)
+          .where(eq(syncFiles.id, item.syncFileId!))
+          .limit(1);
+
+        if (!syncFile || syncFile.status !== 'active') {
+          console.log(`Sync file ${item.syncFileId} is not active, skipping`);
+          await db
+            .update(syncQueue)
+            .set({
+              status: 'failed',
+              errorMessage: 'Sync file is not active',
+              updatedAt: new Date().toISOString(),
+            })
+            .where(eq(syncQueue.id, item.id));
+          return;
+        }
+
+        // Send the file operation
+        await syncEngine.sendOutgoingFileOperation(item.syncFileId!, item.action as any);
+      } else {
+        // Directory sync - check if sync directory is active
+        const [syncDir] = await db
+          .select()
+          .from(syncDirectories)
+          .where(eq(syncDirectories.id, item.syncDirId!))
+          .limit(1);
+
+        if (!syncDir || syncDir.status !== 'active') {
+          console.log(`Sync directory ${item.syncDirId} is not active, skipping`);
+          await db
+            .update(syncQueue)
+            .set({
+              status: 'failed',
+              errorMessage: 'Sync directory is not active',
+              updatedAt: new Date().toISOString(),
+            })
+            .where(eq(syncQueue.id, item.id));
+          return;
+        }
+
+        // Send the directory operation
+        await syncEngine.sendOutgoingOperation(item.syncDirId!, item.action as any, item.filePath);
       }
-
-      // Send the operation
-      await syncEngine.sendOutgoingOperation(item.syncDirId, item.action as any, item.filePath);
 
       // Mark as completed
       await db

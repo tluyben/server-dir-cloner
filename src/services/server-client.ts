@@ -104,12 +104,90 @@ export class ServerClient {
   }
 
   /**
+   * Register a file sync on remote server
+   */
+  async registerFileSync(
+    file: string,
+    sourceServer: string,
+    sourceUrl: string,
+  ): Promise<{
+    id: number;
+    status: string;
+    ready: boolean;
+    fileExists: boolean;
+  }> {
+    const response = await retryOnNetworkError(() =>
+      this.client.post('/api/sync/files/register', {
+        file,
+        sourceServer,
+        sourceUrl,
+        isLeader: false,
+      }),
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Send a file sync operation to remote server (for individual file syncing)
+   */
+  async sendFileSyncOperation(
+    syncFileId: number,
+    action: SyncAction,
+    fileName: string,
+    localFullPath?: string,
+    checksum?: string,
+  ): Promise<{
+    success: boolean;
+    action: SyncAction;
+    filePath: string;
+    processed: boolean;
+    logId?: number;
+  }> {
+    const formData = new FormData();
+    formData.append('syncFileId', syncFileId.toString());
+    formData.append('action', action);
+    formData.append('fileName', fileName);
+    formData.append('timestamp', new Date().toISOString());
+
+    if (checksum) {
+      formData.append('checksum', checksum);
+    }
+
+    // Attach file for create/update operations
+    if ((action === 'create' || action === 'update') && localFullPath) {
+      formData.append('file', createReadStream(localFullPath));
+    }
+
+    const response = await retryOnNetworkError(() =>
+      this.client.post('/api/sync/files/operation', formData, {
+        headers: formData.getHeaders(),
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+      }),
+    );
+
+    return response.data;
+  }
+
+  /**
    * Remove a sync directory on remote server
    */
   async removeSync(syncDirId: number, deleteFiles = false): Promise<void> {
     await retryOnNetworkError(() =>
       this.client.delete(`/api/sync/${syncDirId}`, {
         params: { deleteFiles },
+      }),
+    );
+  }
+
+  /**
+   * Remove a file sync on remote server
+   */
+  async removeFileSync(syncFileId: number, deleteFile = false): Promise<void> {
+    await retryOnNetworkError(() =>
+      this.client.delete(`/api/sync/files/${syncFileId}`, {
+        params: { deleteFile },
       }),
     );
   }

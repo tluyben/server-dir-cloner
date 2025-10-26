@@ -1,4 +1,4 @@
-import { resolve, normalize, relative } from 'path';
+import { resolve, normalize, relative, dirname, basename } from 'path';
 import { existsSync, statSync, accessSync, constants } from 'fs';
 import { AppError } from '../middleware/error.js';
 
@@ -71,6 +71,61 @@ export function validateDirectory(inputPath: string, mustExist = true): string {
   }
 
   return sanitizedPath;
+}
+
+/**
+ * Validates a file path and returns the file path and parent directory
+ * Unlike directories, files may not exist yet - they will be monitored and synced when they appear
+ */
+export function validateFilePath(
+  inputPath: string,
+  mustExist = false,
+): { filePath: string; parentDir: string; fileName: string } {
+  // Validate the path structure (but don't require file to exist)
+  const sanitizedPath = validatePath(inputPath, false);
+
+  // Get parent directory and file name
+  const parentDir = dirname(sanitizedPath);
+  const fileName = basename(sanitizedPath);
+
+  // Validate file name
+  if (!fileName || fileName === '.' || fileName === '..') {
+    throw new AppError(400, 'Invalid file name');
+  }
+
+  // Check if parent directory exists
+  if (!existsSync(parentDir)) {
+    throw new AppError(404, `Parent directory does not exist: ${parentDir}`);
+  }
+
+  // Verify parent is a directory
+  const parentStats = statSync(parentDir);
+  if (!parentStats.isDirectory()) {
+    throw new AppError(400, `Parent path is not a directory: ${parentDir}`);
+  }
+
+  // If file exists, verify it's actually a file (not a directory)
+  if (existsSync(sanitizedPath)) {
+    const stats = statSync(sanitizedPath);
+    if (stats.isDirectory()) {
+      throw new AppError(400, `Path is a directory, not a file: ${sanitizedPath}`);
+    }
+
+    // Check read/write permissions
+    try {
+      accessSync(sanitizedPath, constants.R_OK | constants.W_OK);
+    } catch {
+      throw new AppError(403, `Insufficient permissions for file: ${sanitizedPath}`);
+    }
+  } else if (mustExist) {
+    throw new AppError(404, `File does not exist: ${sanitizedPath}`);
+  }
+
+  return {
+    filePath: sanitizedPath,
+    parentDir,
+    fileName,
+  };
 }
 
 /**
