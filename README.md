@@ -22,20 +22,39 @@ A distributed server application that automatically synchronizes directories in 
 
 ## Quick Start
 
-### 1. Install Dependencies
+Choose your preferred method:
+
+### Option A: Docker (Recommended - Fastest Setup)
+
+```bash
+# Development with hot reload
+docker-compose -f docker-compose.dev.yml up
+
+# Production
+docker-compose up -d
+
+# Access API at http://localhost:3000
+curl http://localhost:3000/health
+```
+
+See **[DOCKER.md](./DOCKER.md)** for complete Docker documentation.
+
+### Option B: Native Node.js Setup
+
+#### 1. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Setup Environment
+#### 2. Setup Environment
 
 ```bash
 cp .env.example .env
 # Edit .env if needed (default values work for development)
 ```
 
-### 3. Initialize Database
+#### 3. Initialize Database
 
 ```bash
 # Run database migrations
@@ -45,7 +64,7 @@ npm run db:migrate
 npx tsx src/db/seed.ts
 ```
 
-### 4. Start the Server
+#### 4. Start the Server
 
 ```bash
 # Development mode with hot reload
@@ -823,7 +842,8 @@ npm run db:studio
 ## Documentation
 
 - **[README.md](./README.md)** (this file) - Project overview and quick start
-- **[SCRIPTS_GUIDE.md](./SCRIPTS_GUIDE.md)** - Local administration scripts guide (NEW!)
+- **[DOCKER.md](./DOCKER.md)** - Complete Docker setup and deployment guide
+- **[SCRIPTS_GUIDE.md](./SCRIPTS_GUIDE.md)** - Local administration scripts guide
 - **[QUICK_START_API_KEYS.md](./QUICK_START_API_KEYS.md)** - 30-second API key guide
 - **[API_KEY_GUIDE.md](./API_KEY_GUIDE.md)** - Comprehensive API key management
 - **[SYNC_GUIDE.md](./SYNC_GUIDE.md)** - Directory synchronization guide (if available)

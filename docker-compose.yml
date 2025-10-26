@@ -1,0 +1,101 @@
+# Production Docker Compose for Directory Cloner API
+version: '3.8'
+
+services:
+  # Main API server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: directory-cloner-api
+    restart: unless-stopped
+
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=/data/content.db
+      - API_PREFIX=/api
+      - CORS_ORIGIN=http://localhost:3000
+      - LOG_LEVEL=info
+      - MAX_FILE_SIZE=104857600
+      - SYNC_DEBOUNCE_MS=100
+      - MAX_CONCURRENT_SYNCS=5
+      - QUEUE_PROCESS_INTERVAL_MS=1000
+      - MAX_RETRY_ATTEMPTS=3
+      - RETRY_BACKOFF_MS=1000
+      - LOG_RETENTION_DAYS=90
+
+    volumes:
+      # Persistent database storage
+      - ./data:/data
+      # Mount sync directories (configure as needed)
+      - ./sync-data:/sync-data
+
+    ports:
+      - "3000:3000"
+
+    networks:
+      - cloner-network
+
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Second server instance for testing multi-server sync
+  api-replica:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: directory-cloner-api-replica
+    restart: unless-stopped
+    profiles:
+      - multi-server
+
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=/data/content.db
+      - API_PREFIX=/api
+      - CORS_ORIGIN=http://localhost:3001
+      - SERVER_ID=server-replica
+      - SERVER_NAME=Replica Server
+
+    volumes:
+      - ./data-replica:/data
+      - ./sync-data:/sync-data
+
+    ports:
+      - "3001:3000"
+
+    networks:
+      - cloner-network
+
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  cloner-network:
+    driver: bridge
+
+volumes:
+  data:
+  data-replica:
