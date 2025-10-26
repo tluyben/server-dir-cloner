@@ -13,6 +13,7 @@ Successfully implemented complete file metadata synchronization across all serve
 ### 1. Database Schema Extension
 
 Added four new fields to `sync_logs` table to track metadata:
+
 - `file_mode` (INTEGER) - Unix file permissions
 - `file_uid` (INTEGER) - Owner user ID
 - `file_gid` (INTEGER) - Owner group ID
@@ -25,8 +26,8 @@ Added four new fields to `sync_logs` table to track metadata:
 **New utility functions** in `src/utils/checksum.ts`:
 
 ```typescript
-getCompleteFileMetadata(filePath)    // Returns: size, checksum, mtime, mode, uid, gid
-getDirectoryMetadata(dirPath)        // Returns: mode, uid, gid, mtime
+getCompleteFileMetadata(filePath); // Returns: size, checksum, mtime, mode, uid, gid
+getDirectoryMetadata(dirPath); // Returns: mode, uid, gid, mtime
 ```
 
 ### 3. Permission Management
@@ -44,6 +45,7 @@ getDirectoryMetadata(dirPath)        // Returns: mode, uid, gid, mtime
 **Modified**: `src/services/sync-engine.ts`
 
 All sync methods updated:
+
 - `performInitialSync()` - Collects and sends metadata for all files/dirs
 - `handleIncomingOperation()` - Receives and applies metadata
 - `sendOutgoingOperation()` - Collects and sends metadata
@@ -56,6 +58,7 @@ All sync methods updated:
 **Modified**: `src/services/server-client.ts`
 
 Updated both API methods to include metadata:
+
 - `sendFileOperation()` - Adds metadata to FormData
 - `sendFileSyncOperation()` - Adds metadata to FormData
 
@@ -66,6 +69,7 @@ FormData now includes: `fileMode`, `fileUid`, `fileGid`, `fileMtime`
 **Modified**: `src/routes/sync.ts`, `src/routes/sync-files.ts`
 
 Operation endpoints now:
+
 - Extract metadata from form data
 - Parse numeric values correctly
 - Pass metadata to sync engine
@@ -75,6 +79,7 @@ Operation endpoints now:
 Created comprehensive guide: **PERMISSIONS_SYNC_GUIDE.md**
 
 Topics covered:
+
 - Feature overview and use cases
 - Technical architecture with diagrams
 - Permission bits explanation
@@ -117,12 +122,14 @@ Log to database
 ### Error Handling
 
 **Graceful degradation approach**:
+
 1. If chmod() fails → Log warning, continue
 2. If chown() fails (EPERM) → Log helpful message, continue
 3. If utimes() fails → Log warning, continue
 4. Sync operation completes even if metadata partially fails
 
 **Error messages include**:
+
 - Specific syscall that failed
 - File path affected
 - Helpful guidance (e.g., "run as root for ownership changes")
@@ -130,6 +137,7 @@ Log to database
 ### Performance Impact
 
 Benchmarked overhead:
+
 - Initial sync (1000 files): +5.6%
 - Single file update: +4.4%
 - Directory creation: +13.3%
@@ -138,18 +146,18 @@ Benchmarked overhead:
 
 ## Files Modified
 
-| File | Type | Changes |
-|------|------|---------|
-| `src/db/schema.ts` | Modified | Added 4 metadata fields to syncLogs |
-| `src/utils/checksum.ts` | Modified | Added 2 metadata collection functions |
-| `src/utils/permissions.ts` | **NEW** | Complete permission management module |
-| `src/services/sync-engine.ts` | Modified | Updated all 6 sync methods |
-| `src/services/server-client.ts` | Modified | Updated 2 API client methods |
-| `src/routes/sync.ts` | Modified | Updated operation endpoint |
-| `src/routes/sync-files.ts` | Modified | Updated file operation endpoint |
-| `drizzle/0003_normal_the_enforcers.sql` | **NEW** | Database migration |
-| `PERMISSIONS_SYNC_GUIDE.md` | **NEW** | Comprehensive documentation |
-| `README.md` | Modified | Added feature + doc link |
+| File                                    | Type     | Changes                               |
+| --------------------------------------- | -------- | ------------------------------------- |
+| `src/db/schema.ts`                      | Modified | Added 4 metadata fields to syncLogs   |
+| `src/utils/checksum.ts`                 | Modified | Added 2 metadata collection functions |
+| `src/utils/permissions.ts`              | **NEW**  | Complete permission management module |
+| `src/services/sync-engine.ts`           | Modified | Updated all 6 sync methods            |
+| `src/services/server-client.ts`         | Modified | Updated 2 API client methods          |
+| `src/routes/sync.ts`                    | Modified | Updated operation endpoint            |
+| `src/routes/sync-files.ts`              | Modified | Updated file operation endpoint       |
+| `drizzle/0003_normal_the_enforcers.sql` | **NEW**  | Database migration                    |
+| `PERMISSIONS_SYNC_GUIDE.md`             | **NEW**  | Comprehensive documentation           |
+| `README.md`                             | Modified | Added feature + doc link              |
 
 ## Testing
 
@@ -172,6 +180,7 @@ npm test
 ### Manual Verification
 
 Created test scenarios:
+
 1. File with 0644 permissions → Verified on remote
 2. File with 0600 permissions → Verified on remote
 3. Directory with 0755 permissions → Verified on remote
@@ -266,6 +275,7 @@ Possible improvements for future iterations:
 ✅ **Feature successfully implemented and tested**
 
 The implementation ensures that:
+
 1. ✅ File permissions are **identical** on all servers
 2. ✅ File ownership is **identical** on all servers (when run as root)
 3. ✅ Modification times are **identical** on all servers

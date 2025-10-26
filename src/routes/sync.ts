@@ -12,7 +12,7 @@ import { syncEngine } from '../services/sync-engine.js';
 import { watcherService } from '../services/watcher.js';
 import { queueProcessor } from '../services/queue-processor.js';
 import { calculateBufferChecksum } from '../utils/checksum.js';
-import { statSync, readdirSync } from 'fs';
+import { statSync, readdirSync, existsSync } from 'fs';
 import { join } from 'path';
 
 const router = Router();
@@ -83,8 +83,15 @@ router.post('/add', validate(addSyncSchema), async (req, res, next) => {
   try {
     const { directory, targets } = req.body;
 
-    // Validate directory
-    const validatedPath = validateDirectory(directory, true);
+    // Validate directory (allow non-existent directories)
+    const validatedPath = validateDirectory(directory, false);
+
+    // Create directory locally if it doesn't exist
+    const fs = await import('fs/promises');
+    if (!existsSync(validatedPath)) {
+      await fs.mkdir(validatedPath, { recursive: true });
+      console.log(`Created local directory: ${validatedPath}`);
+    }
 
     // Get server info
     // const thisServerId = process.env.SERVER_ID || 'unknown';
@@ -118,7 +125,7 @@ router.post('/add', validate(addSyncSchema), async (req, res, next) => {
         })
         .returning();
 
-      // Register sync on target server
+      // Register sync on target server (this will create the directory on remote)
       const client = await createServerClientByName(targetName);
       await client.registerSync(validatedPath, thisServerName, thisServerUrl);
 

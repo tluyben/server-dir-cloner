@@ -5,6 +5,7 @@
 The Directory Cloner now synchronizes **complete file metadata** across servers, ensuring that files and directories on remote servers have **identical permissions, ownership, and timestamps** to the source server.
 
 This feature is critical for:
+
 - **Security**: Maintaining proper file permissions across servers
 - **Access Control**: Preserving user/group ownership settings
 - **Compliance**: Ensuring consistent security policies
@@ -16,12 +17,12 @@ This feature is critical for:
 
 For every file and directory synchronized, the following metadata is now preserved:
 
-| Metadata | Description | Example | Format |
-|----------|-------------|---------|--------|
-| **File Mode** | Unix permissions (rwxrwxrwx) | `0644` for files, `0755` for directories | Integer (octal) |
-| **Owner UID** | User ID of the file owner | `1000` | Integer |
-| **Owner GID** | Group ID of the file owner | `1000` | Integer |
-| **Modification Time** | Last modification timestamp | `2025-10-26T12:34:56.789Z` | ISO 8601 string |
+| Metadata              | Description                  | Example                                  | Format          |
+| --------------------- | ---------------------------- | ---------------------------------------- | --------------- |
+| **File Mode**         | Unix permissions (rwxrwxrwx) | `0644` for files, `0755` for directories | Integer (octal) |
+| **Owner UID**         | User ID of the file owner    | `1000`                                   | Integer         |
+| **Owner GID**         | Group ID of the file owner   | `1000`                                   | Integer         |
+| **Modification Time** | Last modification timestamp  | `2025-10-26T12:34:56.789Z`               | ISO 8601 string |
 
 ### Permission Bits
 
@@ -33,6 +34,7 @@ The file mode preserves all Unix permission bits:
 - **Special bits**: setuid, setgid, sticky bit
 
 **Example permission modes:**
+
 - `0644` - Regular file (rw-r--r--)
 - `0755` - Executable file or directory (rwxr-xr-x)
 - `0600` - Private file (rw-------)
@@ -71,6 +73,7 @@ When files are modified:
 ### 3. Bi-Directional Sync
 
 Changes flow in both directions:
+
 - **Server A → Server B**: Full metadata sync
 - **Server B → Server A**: Full metadata sync
 - **Conflict prevention**: Watcher pause mechanism prevents sync loops
@@ -170,11 +173,13 @@ CREATE TABLE sync_logs (
 - **Graceful degradation**: If ownership cannot be changed, a warning is logged but the sync continues
 
 **Running as root (development):**
+
 ```bash
 sudo npm run dev
 ```
 
 **Running as root (production with systemd):**
+
 ```ini
 [Service]
 User=root
@@ -182,6 +187,7 @@ ExecStart=/usr/bin/node /path/to/app/dist/index.js
 ```
 
 **Using capabilities (alternative to root):**
+
 ```bash
 sudo setcap cap_chown=ep /usr/bin/node
 ```
@@ -189,11 +195,13 @@ sudo setcap cap_chown=ep /usr/bin/node
 ### 2. Permission Warnings
 
 If metadata cannot be applied, the system:
+
 - **Logs a warning** to console
 - **Records the error** in sync logs
 - **Continues with the sync** (doesn't fail the entire operation)
 
 **Example warning:**
+
 ```
 Metadata application warnings for /home/data/file.txt:
 - Permission denied when setting ownership on /home/data/file.txt. Process must run as root or with CAP_CHOWN capability to change file ownership.
@@ -202,6 +210,7 @@ Metadata application warnings for /home/data/file.txt:
 ### 3. Cross-Platform Limitations
 
 **This feature is Linux-specific:**
+
 - UID/GID are Unix/Linux concepts
 - Windows does not have the same permission model
 - Use this feature only when syncing between Linux servers
@@ -211,10 +220,12 @@ Metadata application warnings for /home/data/file.txt:
 **Important**: UIDs and GIDs are synchronized as numeric values.
 
 If users have different UIDs on different servers:
+
 - **UID 1000 on Server A** maps to **UID 1000 on Server B**
 - This might be a **different user** if your servers have different user databases
 
 **Best practice**: Ensure consistent UID/GID mappings across all synchronized servers:
+
 - Use centralized identity management (LDAP, Active Directory, etc.)
 - Or ensure manual user creation with matching UIDs/GIDs
 - Or accept that ownership will reference numeric IDs
@@ -264,6 +275,7 @@ curl http://localhost:3000/api/sync/directories/1/logs \
 ```
 
 **Example output:**
+
 ```json
 {
   "filePath": "config/app.conf",
@@ -302,12 +314,14 @@ This is **not recommended** as it defeats security best practices.
 ### Issue: Ownership Not Applied
 
 **Symptom:**
+
 ```
 Metadata application warnings for /home/data/file.txt:
 - Permission denied when setting ownership
 ```
 
 **Solution:**
+
 1. Run the sync service as root:
    ```bash
    sudo npm run dev
@@ -337,6 +351,7 @@ id appuser
 **Symptom:** Cannot change file permissions
 
 **Possible causes:**
+
 1. File system mounted read-only
 2. File system doesn't support permissions (FAT32, etc.)
 3. SELinux/AppArmor restrictions
@@ -348,6 +363,7 @@ id appuser
 ### 1. Run with Minimal Privileges
 
 While ownership sync requires root, consider:
+
 - **Use systemd security features** to limit root capabilities
 - **Only sync specific directories** that require ownership preservation
 - **Review and audit** all synced files regularly
@@ -355,6 +371,7 @@ While ownership sync requires root, consider:
 ### 2. Validate Source Server Security
 
 Since permissions are copied exactly:
+
 - **Secure your leader server** - it's the source of truth
 - **Audit permissions** before enabling sync
 - **Test in staging** before production deployment
@@ -392,10 +409,10 @@ All sync log entries now include:
   filePath: string;
   fileSize: number;
   checksum: string;
-  fileMode: number;      // NEW: Unix file mode (e.g., 33188 for 0644)
-  fileUid: number;       // NEW: Owner user ID
-  fileGid: number;       // NEW: Owner group ID
-  fileMtime: string;     // NEW: Modification time (ISO 8601)
+  fileMode: number; // NEW: Unix file mode (e.g., 33188 for 0644)
+  fileUid: number; // NEW: Owner user ID
+  fileGid: number; // NEW: Owner group ID
+  fileMtime: string; // NEW: Modification time (ISO 8601)
   status: 'success' | 'failure';
   timestamp: string;
 }
@@ -429,11 +446,11 @@ Metadata synchronization adds minimal overhead:
 
 ### Benchmarks
 
-| Operation | Without Metadata | With Metadata | Overhead |
-|-----------|------------------|---------------|----------|
-| Initial sync (1000 files) | 12.5s | 13.2s | +5.6% |
-| Single file update | 45ms | 47ms | +4.4% |
-| Directory creation | 15ms | 17ms | +13.3% |
+| Operation                 | Without Metadata | With Metadata | Overhead |
+| ------------------------- | ---------------- | ------------- | -------- |
+| Initial sync (1000 files) | 12.5s            | 13.2s         | +5.6%    |
+| Single file update        | 45ms             | 47ms          | +4.4%    |
+| Directory creation        | 15ms             | 17ms          | +13.3%   |
 
 The overhead is negligible for most use cases.
 

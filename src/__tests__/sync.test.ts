@@ -380,4 +380,143 @@ describe('Sync API', () => {
         .expect(201);
     });
   });
+
+  describe('Non-existent Directory Handling', () => {
+    it('should allow registering non-existent directories', async () => {
+      const apiKey = generateApiKey();
+      await db
+        .insert(servers)
+        .values({
+          serverId: 'test-1',
+          name: 'testServer',
+          url: 'http://test:3000',
+          apiKey,
+          active: true,
+        })
+        .returning();
+
+      const nonExistentPath = '/tmp/non-existent-test-dir-' + Date.now();
+
+      // Register non-existent directory
+      await request(app)
+        .post('/api/sync/register')
+        .set('X-API-Key', apiKey)
+        .send({
+          directory: nonExistentPath,
+          sourceServer: 'testSource',
+          sourceUrl: 'http://test-source:3000',
+          isLeader: false,
+        })
+        .expect(201);
+
+      // Verify directory was created
+      const fs = await import('fs/promises');
+      const exists = await fs
+        .access(nonExistentPath)
+        .then(() => true)
+        .catch(() => false);
+      expect(exists).toBe(true);
+
+      // Clean up
+      await fs.rm(nonExistentPath, { recursive: true, force: true });
+    });
+
+    it('should create directory locally when registering non-existent sync directory', async () => {
+      const nonExistentPath = '/tmp/non-existent-sync-' + Date.now();
+      const fs = await import('fs/promises');
+
+      // Ensure directory doesn't exist
+      await fs.rm(nonExistentPath, { recursive: true, force: true }).catch(() => {});
+
+      const [server] = await db
+        .insert(servers)
+        .values({
+          serverId: 'test-1',
+          name: 'testServer',
+          url: 'http://test:3000',
+          apiKey: generateApiKey(),
+          active: true,
+        })
+        .returning();
+
+      // Create sync directory entry (simulating what /api/sync/add would do)
+      const [syncDir] = await db
+        .insert(syncDirectories)
+        .values({
+          localPath: nonExistentPath,
+          remoteServerId: server.id,
+          remotePath: nonExistentPath,
+          isLeader: true,
+          status: 'active',
+        })
+        .returning();
+
+      expect(syncDir).toBeDefined();
+      expect(syncDir.localPath).toBe(nonExistentPath);
+
+      // Clean up
+      await fs.rm(nonExistentPath, { recursive: true, force: true }).catch(() => {});
+    });
+
+    it('should handle initial sync gracefully when directory does not exist', async () => {
+      const nonExistentPath = '/tmp/non-existent-initial-sync-' + Date.now();
+      const fs = await import('fs/promises');
+
+      // Ensure directory doesn't exist
+      await fs.rm(nonExistentPath, { recursive: true, force: true }).catch(() => {});
+
+      const [server] = await db
+        .insert(servers)
+        .values({
+          serverId: 'test-1',
+          name: 'testServer',
+          url: 'http://test:3000',
+          apiKey: generateApiKey(),
+          active: true,
+        })
+        .returning();
+
+      const [syncDir] = await db
+        .insert(syncDirectories)
+        .values({
+          localPath: nonExistentPath,
+          remoteServerId: server.id,
+          remotePath: nonExistentPath,
+          isLeader: true,
+          status: 'active',
+        })
+        .returning();
+
+      // Import syncEngine to test performInitialSync
+      const { syncEngine } = await import('../services/sync-engine.js');
+
+      // This should not throw an error, even though directory doesn't exist
+      const result = await syncEngine.performInitialSync(syncDir.id);
+
+      expect(result).toBeDefined();
+      expect(result.filesSync).toBe(0);
+      expect(result.directoriesSync).toBe(0);
+      expect(result.bytesTransferred).toBe(0);
+
+      // Clean up
+      await fs.rm(nonExistentPath, { recursive: true, force: true }).catch(() => {});
+    });
+
+    it('should allow path validation for non-existent directories', async () => {
+      const { validateDirectory } = await import('../utils/path-validator.js');
+      const nonExistentPath = '/tmp/validation-test-' + Date.now();
+      const fs = await import('fs/promises');
+
+      // Ensure directory doesn't exist
+      await fs.rm(nonExistentPath, { recursive: true, force: true }).catch(() => {});
+
+      // Should not throw error when mustExist=false
+      const validatedPath = validateDirectory(nonExistentPath, false);
+      expect(validatedPath).toBeDefined();
+      expect(validatedPath).toContain('validation-test');
+
+      // Should throw error when mustExist=true
+      expect(() => validateDirectory(nonExistentPath, true)).toThrow();
+    });
+  });
 });

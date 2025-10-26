@@ -59,15 +59,23 @@ export function validatePath(inputPath: string, mustExist = true): string {
 
 /**
  * Validates that a path is a directory
+ * @param inputPath - The path to validate
+ * @param mustExist - If true, directory must exist. If false, validates path structure only.
+ * @returns The validated/sanitized directory path
  */
 export function validateDirectory(inputPath: string, mustExist = true): string {
   const sanitizedPath = validatePath(inputPath, mustExist);
 
+  // If directory exists, verify it's actually a directory
   if (existsSync(sanitizedPath)) {
     const stats = statSync(sanitizedPath);
     if (!stats.isDirectory()) {
       throw new AppError(400, `Path is not a directory: ${sanitizedPath}`);
     }
+  } else if (mustExist) {
+    // If mustExist is true and directory doesn't exist, error was already thrown by validatePath
+    // This branch should not be reached, but included for clarity
+    throw new AppError(404, `Directory does not exist: ${sanitizedPath}`);
   }
 
   return sanitizedPath;

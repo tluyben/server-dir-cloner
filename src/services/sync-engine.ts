@@ -20,6 +20,7 @@ export class SyncEngine {
   /**
    * Perform initial sync from leader to target
    * Walks the entire directory tree and copies all files
+   * If directory doesn't exist locally, skips walking but sync is still established
    */
   async performInitialSync(syncDirId: number): Promise<{
     filesSync: number;
@@ -46,6 +47,24 @@ export class SyncEngine {
     }
 
     console.log(`Starting initial sync for ${syncDir.localPath}`);
+
+    // Check if directory exists locally
+    if (!existsSync(syncDir.localPath)) {
+      console.log(
+        `Directory ${syncDir.localPath} does not exist yet, skipping initial file sync. Watcher will sync when files are created.`,
+      );
+
+      // Update last sync time even though no files were synced
+      await db
+        .update(syncDirectories)
+        .set({
+          lastSyncAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(syncDirectories.id, syncDirId));
+
+      return { filesSync: 0, directoriesSync: 0, bytesTransferred: 0 };
+    }
 
     // Create server client
     const client = await createServerClient(syncDir.remoteServerId);

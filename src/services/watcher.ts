@@ -47,7 +47,15 @@ export class WatcherService {
 
     console.log(`Starting watcher for ${syncDir.localPath} (sync dir ${syncDirId})`);
 
+    // Check if directory exists - chokidar will wait for it to be created if it doesn't
+    if (!existsSync(syncDir.localPath)) {
+      console.log(
+        `Directory ${syncDir.localPath} does not exist yet. Watcher will activate when directory is created.`,
+      );
+    }
+
     // Create watcher with options
+    // Note: chokidar will watch for the directory to be created if it doesn't exist yet
     const watcher = chokidar.watch(syncDir.localPath, {
       persistent: true,
       ignoreInitial: true, // Don't emit events for existing files
