@@ -20,6 +20,7 @@ Added support for synchronizing individual files (e.g., `/home/tycho/config.json
 ### 1. Database Schema Changes
 
 **New Table: `sync_files`**
+
 ```sql
 CREATE TABLE sync_files (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,6 +40,7 @@ CREATE TABLE sync_files (
 ```
 
 **Updated Tables:**
+
 - `sync_logs`: Added `sync_file_id` column (nullable, FK to sync_files)
 - `sync_queue`: Added `sync_file_id` column (nullable, FK to sync_files)
 - Both `sync_dir_id` and `sync_file_id` are now nullable - one must be set
@@ -47,16 +49,16 @@ CREATE TABLE sync_files (
 
 **Base Path:** `/api/sync/files`
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/add` | Register a file for synchronization |
-| `POST` | `/register` | Register file sync on remote server (internal) |
-| `POST` | `/operation` | Handle incoming file operation (internal) |
-| `GET` | `/` | List all synced files |
-| `GET` | `/:id` | Get specific file sync details |
-| `PUT` | `/:id` | Update file sync status (pause/resume) |
-| `DELETE` | `/:id` | Remove file sync |
-| `GET` | `/:id/logs` | Get sync logs for a file |
+| Method   | Endpoint     | Description                                    |
+| -------- | ------------ | ---------------------------------------------- |
+| `POST`   | `/add`       | Register a file for synchronization            |
+| `POST`   | `/register`  | Register file sync on remote server (internal) |
+| `POST`   | `/operation` | Handle incoming file operation (internal)      |
+| `GET`    | `/`          | List all synced files                          |
+| `GET`    | `/:id`       | Get specific file sync details                 |
+| `PUT`    | `/:id`       | Update file sync status (pause/resume)         |
+| `DELETE` | `/:id`       | Remove file sync                               |
+| `GET`    | `/:id/logs`  | Get sync logs for a file                       |
 
 ### 3. New Files Created
 
@@ -93,19 +95,21 @@ Unlike directory syncing which watches the directory itself, file syncing:
 4. **Uses shallow depth** (`depth: 0`) to avoid recursion
 
 **Example:**
+
 ```typescript
 // For file: /home/tycho/config.json
 // Watches: /home/tycho
 // Filters: Only events for "config.json"
 chokidar.watch('/home/tycho', {
   depth: 0,
-  ignored: (path) => basename(path) !== 'config.json'
+  ignored: (path) => basename(path) !== 'config.json',
 });
 ```
 
 ### Sync Flow
 
 **When file doesn't exist yet:**
+
 ```
 1. User registers file for sync
 2. Parent directory watcher starts
@@ -114,6 +118,7 @@ chokidar.watch('/home/tycho', {
 ```
 
 **When file exists:**
+
 ```
 1. User registers file for sync
 2. Perform initial sync (send to remote)
@@ -122,6 +127,7 @@ chokidar.watch('/home/tycho', {
 ```
 
 **When file disappears:**
+
 ```
 1. 'unlink' event detected
 2. Send delete operation to remote
@@ -131,17 +137,17 @@ chokidar.watch('/home/tycho', {
 
 ## Key Differences: Directory vs. File Sync
 
-| Aspect | Directory Sync | File Sync |
-|--------|---------------|-----------|
-| **Table** | `sync_directories` | `sync_files` |
-| **Path Must Exist** | Yes (created if missing) | No (monitored until appears) |
-| **Watched Path** | The directory itself | Parent directory only |
-| **Event Filtering** | All files/subdirectories | Single file only |
-| **Watch Depth** | Unlimited (recursive) | 0 (parent only) |
-| **Initial Sync** | Copy entire tree | Skip if file doesn't exist |
-| **File Creation** | Create on remote | Only if exists on leader |
-| **Existence Tracking** | N/A | `fileExists` field |
-| **Allowed Actions** | create, update, delete, mkdir, rmdir | create, update, delete only |
+| Aspect                 | Directory Sync                       | File Sync                    |
+| ---------------------- | ------------------------------------ | ---------------------------- |
+| **Table**              | `sync_directories`                   | `sync_files`                 |
+| **Path Must Exist**    | Yes (created if missing)             | No (monitored until appears) |
+| **Watched Path**       | The directory itself                 | Parent directory only        |
+| **Event Filtering**    | All files/subdirectories             | Single file only             |
+| **Watch Depth**        | Unlimited (recursive)                | 0 (parent only)              |
+| **Initial Sync**       | Copy entire tree                     | Skip if file doesn't exist   |
+| **File Creation**      | Create on remote                     | Only if exists on leader     |
+| **Existence Tracking** | N/A                                  | `fileExists` field           |
+| **Allowed Actions**    | create, update, delete, mkdir, rmdir | create, update, delete only  |
 
 ## Testing Performed
 
@@ -266,6 +272,7 @@ npm run dev  # or npm start for production
 ```
 
 **Rollback (if needed):**
+
 ```sql
 -- Drop new tables
 DROP TABLE IF EXISTS sync_files;

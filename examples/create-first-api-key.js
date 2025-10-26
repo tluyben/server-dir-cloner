@@ -49,7 +49,7 @@ async function createFirstApiKey() {
     console.log('─'.repeat(60));
 
     console.log('\n📝 Important:');
-    console.log('  1. Save this API key securely - it won\'t be shown again!');
+    console.log("  1. Save this API key securely - it won't be shown again!");
     console.log('  2. Add it to your .env file:');
     console.log(`     X_API_KEY=${server.apiKey}`);
     console.log('  3. Use it in API requests with the X-API-Key header:');
@@ -67,7 +67,6 @@ async function createFirstApiKey() {
     }
 
     return server.apiKey;
-
   } catch (error) {
     console.error('\n❌ Failed to create API key:');
 
@@ -78,7 +77,9 @@ async function createFirstApiKey() {
 
       if (error.response.status === 409) {
         console.log('\n💡 Tip: A server with this name already exists. Try:');
-        console.log(`   SERVER_NAME="MyServer-${Date.now()}" node examples/create-first-api-key.js`);
+        console.log(
+          `   SERVER_NAME="MyServer-${Date.now()}" node examples/create-first-api-key.js`,
+        );
       }
     } else if (error.request) {
       // No response received

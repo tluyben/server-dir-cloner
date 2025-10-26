@@ -100,6 +100,10 @@ export const syncLogs = sqliteTable('sync_logs', {
   errorMessage: text('error_message'),
   fileSize: integer('file_size'),
   checksum: text('checksum'),
+  fileMode: integer('file_mode'), // Unix file permissions (octal, e.g., 0o644)
+  fileUid: integer('file_uid'), // Owner user ID
+  fileGid: integer('file_gid'), // Owner group ID
+  fileMtime: text('file_mtime'), // Modification time (ISO string)
   timestamp: text('timestamp')
     .notNull()
     .default(sql`(datetime('now'))`),

@@ -26,6 +26,7 @@ This Express API uses API keys to authenticate servers (clients) connecting to s
 When registering a new server, the API automatically generates a secure API key if none is provided.
 
 **Request:**
+
 ```bash
 curl -X POST http://localhost:3000/api/servers \
   -H "Content-Type: application/json" \
@@ -36,6 +37,7 @@ curl -X POST http://localhost:3000/api/servers \
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -81,7 +83,7 @@ async function registerServer() {
   try {
     const response = await axios.post('http://localhost:3000/api/servers', {
       name: 'Automated Server Instance',
-      url: 'http://automated-instance.example.com:3000'
+      url: 'http://automated-instance.example.com:3000',
     });
 
     const { apiKey, serverId, id } = response.data;
@@ -102,11 +104,10 @@ async function registerServer() {
 }
 
 // Usage
-registerServer()
-  .then(apiKey => {
-    // Use the API key for subsequent requests
-    console.log('Use this API key in your X-API-Key header:', apiKey);
-  });
+registerServer().then((apiKey) => {
+  // Use the API key for subsequent requests
+  console.log('Use this API key in your X-API-Key header:', apiKey);
+});
 ```
 
 ### Python Example
@@ -242,7 +243,7 @@ console.log('New API Key:', newApiKey);
 
 // Then update via API
 await axios.put('http://localhost:3000/api/servers/1', {
-  apiKey: newApiKey
+  apiKey: newApiKey,
 });
 ```
 
@@ -299,7 +300,7 @@ async function rotateApiKey(serverId) {
   const newKey = generateApiKey();
 
   await axios.put(`http://localhost:3000/api/servers/${serverId}`, {
-    apiKey: newKey
+    apiKey: newKey,
   });
 
   return newKey;
@@ -380,34 +381,34 @@ metadata:
   name: sync-server
 spec:
   initContainers:
-  - name: register-api-key
-    image: curlimages/curl:latest
-    command:
-    - sh
-    - -c
-    - |
-      RESPONSE=$(curl -s -X POST http://management-api:3000/api/servers \
-        -H "Content-Type: application/json" \
-        -d "{\"name\":\"pod-$POD_NAME\",\"url\":\"http://$POD_IP:3000\"}")
-      echo "$RESPONSE" | jq -r '.apiKey' > /shared/api-key
-    volumeMounts:
-    - name: shared-data
-      mountPath: /shared
+    - name: register-api-key
+      image: curlimages/curl:latest
+      command:
+        - sh
+        - -c
+        - |
+          RESPONSE=$(curl -s -X POST http://management-api:3000/api/servers \
+            -H "Content-Type: application/json" \
+            -d "{\"name\":\"pod-$POD_NAME\",\"url\":\"http://$POD_IP:3000\"}")
+          echo "$RESPONSE" | jq -r '.apiKey' > /shared/api-key
+      volumeMounts:
+        - name: shared-data
+          mountPath: /shared
   containers:
-  - name: app
-    image: your-app:latest
-    env:
-    - name: X_API_KEY
-      valueFrom:
-        secretKeyRef:
-          name: api-key
-          key: key
-    volumeMounts:
-    - name: shared-data
-      mountPath: /shared
+    - name: app
+      image: your-app:latest
+      env:
+        - name: X_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-key
+              key: key
+      volumeMounts:
+        - name: shared-data
+          mountPath: /shared
   volumes:
-  - name: shared-data
-    emptyDir: {}
+    - name: shared-data
+      emptyDir: {}
 ```
 
 ## Database Direct Access (For Advanced Use Cases)
@@ -437,7 +438,7 @@ function createServerWithApiKey(name, url) {
     name,
     url,
     apiKey,
-    active: true
+    active: true,
   };
 }
 
@@ -478,6 +479,7 @@ curl -X PUT http://localhost:3000/api/servers/{id} \
 ### Connection Test Failed During Registration
 
 The API tests server connectivity before registration. Ensure:
+
 - The remote server URL is accessible
 - The remote server has the same API running
 - Network connectivity exists between servers
@@ -501,14 +503,14 @@ curl -H "Authorization: your-key" http://localhost:3000/api/endpoint
 
 ### Endpoints
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/servers` | Register new server | No |
-| GET | `/api/servers` | List all servers | No |
-| GET | `/api/servers/:id` | Get server details | No |
-| PUT | `/api/servers/:id` | Update server | No |
-| DELETE | `/api/servers/:id` | Delete server | No |
-| POST | `/api/servers/:id/ping` | Test server connection | No |
+| Method | Endpoint                | Description            | Auth Required |
+| ------ | ----------------------- | ---------------------- | ------------- |
+| POST   | `/api/servers`          | Register new server    | No            |
+| GET    | `/api/servers`          | List all servers       | No            |
+| GET    | `/api/servers/:id`      | Get server details     | No            |
+| PUT    | `/api/servers/:id`      | Update server          | No            |
+| DELETE | `/api/servers/:id`      | Delete server          | No            |
+| POST   | `/api/servers/:id/ping` | Test server connection | No            |
 
 **Note**: Server management endpoints don't require authentication to allow initial bootstrapping. Secure these endpoints in production environments (e.g., firewall, VPN, separate management network).
 
@@ -516,14 +518,14 @@ curl -H "Authorization: your-key" http://localhost:3000/api/endpoint
 
 Sync-related endpoints require authentication:
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/sync/directories` | Create sync directory |
-| GET | `/api/sync/directories` | List sync directories |
-| PUT | `/api/sync/directories/:id` | Update sync directory |
+| Method | Endpoint                    | Description           |
+| ------ | --------------------------- | --------------------- |
+| POST   | `/api/sync/directories`     | Create sync directory |
+| GET    | `/api/sync/directories`     | List sync directories |
+| PUT    | `/api/sync/directories/:id` | Update sync directory |
 | DELETE | `/api/sync/directories/:id` | Delete sync directory |
-| POST | `/api/sync/files` | Upload file |
-| GET | `/api/sync/files` | Download file |
+| POST   | `/api/sync/files`           | Upload file           |
+| GET    | `/api/sync/files`           | Download file         |
 
 ## Next Steps
 
@@ -543,6 +545,7 @@ Sync-related endpoints require authentication:
 ## Support
 
 For issues or questions about API key management, check:
+
 - Database schema in `src/db/schema.ts:52-66`
 - Authentication middleware in `src/middleware/auth.ts`
 - Server routes in `src/routes/servers.ts`

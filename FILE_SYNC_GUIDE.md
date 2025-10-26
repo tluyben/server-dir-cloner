@@ -18,12 +18,12 @@ File syncing allows you to monitor and synchronize specific files (e.g., `/home/
 
 ### Difference from Directory Syncing
 
-| Aspect | Directory Sync | File Sync |
-|--------|---------------|-----------|
-| **What's monitored** | Entire directory tree | Single file only |
-| **Watched path** | The directory itself | Parent directory (filtered for specific file) |
-| **File creation** | All files in directory | Only the specific file |
-| **Initial behavior** | Directory must exist | File can be created later |
+| Aspect               | Directory Sync         | File Sync                                     |
+| -------------------- | ---------------------- | --------------------------------------------- |
+| **What's monitored** | Entire directory tree  | Single file only                              |
+| **Watched path**     | The directory itself   | Parent directory (filtered for specific file) |
+| **File creation**    | All files in directory | Only the specific file                        |
+| **Initial behavior** | Directory must exist   | File can be created later                     |
 
 ### File Lifecycle
 
@@ -42,6 +42,7 @@ File syncing allows you to monitor and synchronize specific files (e.g., `/home/
 Register a file to be synchronized with one or more target servers.
 
 **Request:**
+
 ```json
 {
   "file": "/home/tycho/config.json",
@@ -50,6 +51,7 @@ Register a file to be synchronized with one or more target servers.
 ```
 
 **Response (file exists):**
+
 ```json
 {
   "id": 1,
@@ -74,6 +76,7 @@ Register a file to be synchronized with one or more target servers.
 ```
 
 **Response (file doesn't exist yet):**
+
 ```json
 {
   "id": 1,
@@ -100,11 +103,13 @@ Register a file to be synchronized with one or more target servers.
 **GET** `/api/sync/files`
 
 **Query Parameters:**
+
 - `status` (optional): Filter by status (`active`, `paused`, `error`)
 - `serverId` (optional): Filter by remote server ID
 - `fileExists` (optional): Filter by file existence (`true`, `false`)
 
 **Response:**
+
 ```json
 [
   {
@@ -135,6 +140,7 @@ Register a file to be synchronized with one or more target servers.
 **GET** `/api/sync/files/:id`
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -165,6 +171,7 @@ Register a file to be synchronized with one or more target servers.
 Pause or resume file synchronization.
 
 **Request:**
+
 ```json
 {
   "status": "paused"
@@ -172,6 +179,7 @@ Pause or resume file synchronization.
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -187,6 +195,7 @@ Pause or resume file synchronization.
 Remove file sync configuration (optionally delete the file).
 
 **Query Parameters:**
+
 - `deleteFile` (optional): Whether to delete the actual file (`true`, `false`)
 
 **Response:** `204 No Content`
@@ -196,6 +205,7 @@ Remove file sync configuration (optionally delete the file).
 **GET** `/api/sync/files/:id/logs`
 
 **Query Parameters:**
+
 - `action` (optional): Filter by action (`create`, `update`, `delete`)
 - `status` (optional): Filter by status (`success`, `failure`, `pending`)
 - `startDate` (optional): Filter logs after this date (ISO 8601)
@@ -204,6 +214,7 @@ Remove file sync configuration (optionally delete the file).
 - `offset` (optional): Pagination offset (default: 0)
 
 **Response:**
+
 ```json
 [
   {
@@ -379,12 +390,14 @@ curl -X POST http://localhost:3000/api/sync/files/add \
 ### File Not Syncing
 
 **Check file exists status:**
+
 ```bash
 curl http://localhost:3000/api/sync/files/1
 # Look at "fileExists" field
 ```
 
 **Check sync logs:**
+
 ```bash
 curl "http://localhost:3000/api/sync/files/1/logs?status=failure"
 ```
@@ -396,6 +409,7 @@ The system watches the parent directory with a slight delay for file system stab
 ### Permission Errors
 
 Ensure:
+
 1. The parent directory exists
 2. The application has read/write permissions to the parent directory
 3. The parent directory is in an allowed base path (check `ALLOWED_BASE_PATHS` environment variable)
@@ -403,6 +417,7 @@ Ensure:
 ### Sync Conflicts
 
 If the file is modified on both servers simultaneously:
+
 - The most recent change wins (based on filesystem modification time)
 - Check sync logs to see which version was applied
 

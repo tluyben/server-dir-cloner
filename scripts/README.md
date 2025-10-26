@@ -82,6 +82,7 @@ npm run sync:status -- --help
 ## Full Documentation
 
 See **[../SCRIPTS_GUIDE.md](../SCRIPTS_GUIDE.md)** for:
+
 - Detailed usage instructions
 - All available options
 - Example workflows

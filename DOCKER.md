@@ -229,6 +229,7 @@ docker-compose ps
 ```
 
 This starts:
+
 - **Primary Server**: `http://localhost:3000`
 - **Replica Server**: `http://localhost:3001`
 
@@ -283,21 +284,21 @@ docker-compose exec api-replica cat /sync-data/shared/test.txt
 
 All environment variables can be configured via `docker-compose.yml`:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `NODE_ENV` | `production` | Environment mode |
-| `PORT` | `3000` | Server port |
-| `DATABASE_URL` | `/data/content.db` | SQLite database path |
-| `API_PREFIX` | `/api` | API route prefix |
-| `CORS_ORIGIN` | `http://localhost:3000` | Allowed CORS origin |
-| `MAX_FILE_SIZE` | `104857600` | Max file size (100MB) |
-| `SYNC_DEBOUNCE_MS` | `100` | Filesystem event debounce |
-| `MAX_CONCURRENT_SYNCS` | `5` | Parallel sync operations |
-| `QUEUE_PROCESS_INTERVAL_MS` | `1000` | Queue processing interval |
-| `MAX_RETRY_ATTEMPTS` | `3` | Max sync retry attempts |
-| `RETRY_BACKOFF_MS` | `1000` | Initial retry backoff |
-| `LOG_LEVEL` | `info` | Logging level |
-| `LOG_RETENTION_DAYS` | `90` | Days to keep logs |
+| Variable                    | Default                 | Description               |
+| --------------------------- | ----------------------- | ------------------------- |
+| `NODE_ENV`                  | `production`            | Environment mode          |
+| `PORT`                      | `3000`                  | Server port               |
+| `DATABASE_URL`              | `/data/content.db`      | SQLite database path      |
+| `API_PREFIX`                | `/api`                  | API route prefix          |
+| `CORS_ORIGIN`               | `http://localhost:3000` | Allowed CORS origin       |
+| `MAX_FILE_SIZE`             | `104857600`             | Max file size (100MB)     |
+| `SYNC_DEBOUNCE_MS`          | `100`                   | Filesystem event debounce |
+| `MAX_CONCURRENT_SYNCS`      | `5`                     | Parallel sync operations  |
+| `QUEUE_PROCESS_INTERVAL_MS` | `1000`                  | Queue processing interval |
+| `MAX_RETRY_ATTEMPTS`        | `3`                     | Max sync retry attempts   |
+| `RETRY_BACKOFF_MS`          | `1000`                  | Initial retry backoff     |
+| `LOG_LEVEL`                 | `info`                  | Logging level             |
+| `LOG_RETENTION_DAYS`        | `90`                    | Days to keep logs         |
 
 ### Volume Mounts
 
@@ -305,18 +306,18 @@ All environment variables can be configured via `docker-compose.yml`:
 
 ```yaml
 volumes:
-  - .:/app                      # Source code (hot reload)
-  - node_modules:/app/node_modules  # Dependencies
-  - ./content.db:/app/content.db    # Database
-  - ./test-sync:/test-sync          # Test sync directory
+  - .:/app # Source code (hot reload)
+  - node_modules:/app/node_modules # Dependencies
+  - ./content.db:/app/content.db # Database
+  - ./test-sync:/test-sync # Test sync directory
 ```
 
 #### Production Volumes
 
 ```yaml
 volumes:
-  - ./data:/data                # Persistent database
-  - ./sync-data:/sync-data      # Sync directories
+  - ./data:/data # Persistent database
+  - ./sync-data:/sync-data # Sync directories
 ```
 
 ### Network Configuration
@@ -439,19 +440,22 @@ docker inspect --format='{{json .State.Health}}' directory-cloner-api | jq
 ### Security
 
 1. **Don't Expose Server Management Endpoints**
+
    ```yaml
    # Use firewall or reverse proxy
    ports:
-     - "127.0.0.1:3000:3000"  # Only localhost
+     - '127.0.0.1:3000:3000' # Only localhost
    ```
 
 2. **Use Secrets for API Keys**
+
    ```bash
    # Use Docker secrets or external secrets manager
    docker secret create api_key ./api_key.txt
    ```
 
 3. **Run as Non-Root User**
+
    ```dockerfile
    # Already configured in Dockerfile.prod
    USER expressjs
@@ -461,13 +465,14 @@ docker inspect --format='{{json .State.Health}}' directory-cloner-api | jq
    ```yaml
    # Use reverse proxy like Nginx or Traefik
    labels:
-     - "traefik.enable=true"
-     - "traefik.http.routers.api.tls=true"
+     - 'traefik.enable=true'
+     - 'traefik.http.routers.api.tls=true'
    ```
 
 ### Performance
 
 1. **Optimize Resource Limits**
+
    ```yaml
    deploy:
      resources:
@@ -480,9 +485,10 @@ docker inspect --format='{{json .State.Health}}' directory-cloner-api | jq
    ```
 
 2. **Use Named Volumes for Better Performance**
+
    ```yaml
    volumes:
-     - db-data:/data  # Named volume (faster than bind mount)
+     - db-data:/data # Named volume (faster than bind mount)
    ```
 
 3. **Enable BuildKit**
@@ -494,12 +500,14 @@ docker inspect --format='{{json .State.Health}}' directory-cloner-api | jq
 ### Monitoring
 
 1. **Collect Logs**
+
    ```bash
    # Configure log rotation
    docker-compose logs -f --tail=100 api > logs/docker-$(date +%Y%m%d).log
    ```
 
 2. **Monitor Health**
+
    ```bash
    # Create monitoring script
    watch -n 5 'docker-compose ps && curl -s http://localhost:3000/health | jq'
@@ -584,6 +592,7 @@ networks:
 ## Support
 
 For issues, questions, or contributions:
+
 - Check existing documentation: `README.md`, `CLAUDE.md`
 - Review logs: `docker-compose logs -f`
 - Check health: `curl http://localhost:3000/health`

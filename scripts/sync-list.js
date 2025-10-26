@@ -116,11 +116,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   Note: Requires X-API-Key to be set. Create one with: npm run create-api-key
 `,
-      [
-        'node scripts/sync-list.js',
-        'npm run sync:list',
-        'npm run sync:list -- --detailed',
-      ],
+      ['node scripts/sync-list.js', 'npm run sync:list', 'npm run sync:list -- --detailed'],
     );
     process.exit(0);
   }

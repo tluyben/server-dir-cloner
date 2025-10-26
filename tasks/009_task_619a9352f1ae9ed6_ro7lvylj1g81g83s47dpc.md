@@ -3,13 +3,14 @@ You are an expert all-round developer who knows everything about Next.js, TypeSc
 Task: Make sure rights are the same on both sides
 
 Description:
+
 <p>Make sure that with every change, the ownershp AND rights on the files/directories are IDENTICAL to the other server</p>
 
 Type: Program
 Priority: medium
 
+IMPORTANT:
 
-IMPORTANT: 
 - Study the project's CLAUDE.md and README.md for conventions and standards
 - Follow all existing patterns and best practices in the codebase
 - Ensure TypeScript strict compliance

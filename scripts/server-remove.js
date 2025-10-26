@@ -72,7 +72,10 @@ async function removeServer(serverId) {
 
   // Perform deletion
   const deleteResponse = await client.delete(`/api/servers/${serverId}`);
-  const deleteResult = handleResponse(deleteResponse, `Server "${server.name}" removed successfully`);
+  const deleteResult = handleResponse(
+    deleteResponse,
+    `Server "${server.name}" removed successfully`,
+  );
 
   if (!deleteResult.success) {
     process.exit(1);
@@ -94,10 +97,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     --id <number>       Server ID (required)
     --help              Show this help message
 `,
-      [
-        'node scripts/server-remove.js --id 1',
-        'npm run server:remove -- --id 1',
-      ],
+      ['node scripts/server-remove.js --id 1', 'npm run server:remove -- --id 1'],
     );
     process.exit(args.help ? 0 : 1);
   }

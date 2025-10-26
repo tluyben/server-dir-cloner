@@ -35,24 +35,28 @@ Provides shared functionality for all scripts:
 ### 3. Server Management Scripts
 
 #### server-add.js
+
 - Register new servers in the synchronization network
 - Auto-generates API key if not provided
 - Tests connection before registration
 - Saves server details to database
 
 #### server-list.js
+
 - Lists all registered servers
 - Optional `--detailed` flag for full information
 - Shows sync count and last seen time
 - Displays server status (active/inactive)
 
 #### server-remove.js
+
 - Removes servers from the network
 - Validates no active syncs exist
 - Shows server details before deletion
 - Prevents accidental removal of active servers
 
 #### server-ping.js
+
 - Tests connectivity to registered servers
 - Validates API endpoints are responding
 - Shows connection status and timing
@@ -61,24 +65,28 @@ Provides shared functionality for all scripts:
 ### 4. Sync Management Scripts
 
 #### sync-add.js
+
 - Configures directories for synchronization
 - Supports multiple target servers
 - Performs initial sync automatically
 - Requires API key authentication
 
 #### sync-list.js
+
 - Lists all sync directories
 - Optional `--detailed` flag for statistics
 - Shows sync status and configuration
 - Displays last sync time and error count
 
 #### sync-remove.js
+
 - Stops synchronization for a directory
 - Does NOT delete files (only stops sync)
 - Shows sync details before removal
 - Confirms action with user
 
 #### sync-status.js
+
 - Detailed status for specific sync
 - Optional `--logs` flag for operation history
 - Shows statistics (success/fail counts)
@@ -106,7 +114,9 @@ Added to `package.json`:
 ### 6. Documentation
 
 #### SCRIPTS_GUIDE.md (18KB, 657 lines)
+
 Comprehensive guide covering:
+
 - Quick start instructions
 - Detailed usage for each script
 - All available options and flags
@@ -116,13 +126,16 @@ Comprehensive guide covering:
 - Security best practices
 
 #### scripts/README.md
+
 Quick reference guide in scripts directory:
+
 - Command syntax examples
 - Prerequisites
 - Help information
 - Link to full documentation
 
 #### Updated README.md
+
 - Added "Local Administration" section
 - Reorganized Available Scripts section
 - Added Quick Start step for scripts
@@ -131,6 +144,7 @@ Quick reference guide in scripts directory:
 ### 7. Testing
 
 Created `src/__tests__/scripts.test.ts`:
+
 - Verifies all script files exist
 - Tests directory structure
 - Validates npm scripts in package.json
@@ -139,6 +153,7 @@ Created `src/__tests__/scripts.test.ts`:
 - Integration tests with actual API calls
 
 Test Results:
+
 - 16 tests total
 - 12 passed ✅
 - 4 failed (due to unrelated API endpoint issues, not script functionality)
@@ -155,6 +170,7 @@ Test Results:
 ## Usage Examples
 
 ### Quick Start
+
 ```bash
 # Create API key
 npm run create-api-key
@@ -170,6 +186,7 @@ npm run sync:status -- --id 1 --logs
 ```
 
 ### Advanced Usage
+
 ```bash
 # List all servers with details
 npm run server:list -- --detailed
@@ -197,6 +214,7 @@ npm run sync:remove -- --id 1
 ## File Changes
 
 ### New Files
+
 - `scripts/common.js` (5.5KB)
 - `scripts/server-add.js` (2.7KB)
 - `scripts/server-list.js` (2.9KB)
@@ -212,6 +230,7 @@ npm run sync:remove -- --id 1
 - `src/__tests__/scripts.test.ts` (6.5KB)
 
 ### Modified Files
+
 - `package.json` - Added 8 npm scripts
 - `README.md` - Added scripts section, reorganized, added Quick Start step
 - `eslint.config.js` - Configured to ignore script files
@@ -219,18 +238,22 @@ npm run sync:remove -- --id 1
 ## Technical Details
 
 ### Dependencies
+
 - Uses existing dependencies (axios, fs, path)
 - No additional packages required
 - Compatible with Node.js 18+
 
 ### API Integration
+
 Scripts interact with existing API endpoints:
+
 - `/api/servers` - Server management
 - `/api/sync/directories` - Sync directory management
 - `/api/sync/directories/:id/logs` - Sync operation logs
 - `/health` - Server health check
 
 ### Security
+
 - API keys loaded from `.env.local` (gitignored)
 - No keys hardcoded in scripts
 - Server connection validation before registration
@@ -239,6 +262,7 @@ Scripts interact with existing API endpoints:
 ## Future Enhancements
 
 Potential improvements:
+
 1. Interactive mode (readline prompts)
 2. JSON output mode for automation
 3. Batch operations (add multiple servers at once)

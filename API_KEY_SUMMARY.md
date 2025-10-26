@@ -3,6 +3,7 @@
 ## What You Asked For
 
 You asked:
+
 > "How do I register/add API keys? How do I get them? How can I create the first one (that needs to be automatic as it will be done by a management system)?"
 
 ## The Answer
@@ -17,11 +18,13 @@ You asked:
 ### 2. How to Register/Add API Keys
 
 **Method 1: Quick Command (Easiest)**
+
 ```bash
 npm run create-api-key
 ```
 
 **Method 2: HTTP API Call**
+
 ```bash
 curl -X POST http://localhost:3000/api/servers \
   -H "Content-Type: application/json" \
@@ -29,12 +32,13 @@ curl -X POST http://localhost:3000/api/servers \
 ```
 
 **Method 3: Programmatic (Node.js)**
+
 ```javascript
 import axios from 'axios';
 
 const response = await axios.post('http://localhost:3000/api/servers', {
   name: 'My Server',
-  url: 'http://localhost:3000'
+  url: 'http://localhost:3000',
 });
 
 const apiKey = response.data.apiKey;
@@ -44,25 +48,29 @@ console.log('API Key:', apiKey);
 ### 3. How Management Systems Can Automate This
 
 **Example Scripts Provided:**
+
 - `examples/create-first-api-key.js` - Node.js/JavaScript
 - `examples/create_first_api_key.py` - Python
 - `examples/create-first-api-key.sh` - Bash shell
 
 **For Container Orchestration:**
+
 ```dockerfile
 # In your Dockerfile or entrypoint script
 CMD ["bash", "-c", "node examples/create-first-api-key.js && npm start"]
 ```
 
 **For Kubernetes:**
+
 ```yaml
 initContainers:
-- name: register-api-key
-  image: curlimages/curl
-  command: ["sh", "-c", "curl -X POST http://api:3000/api/servers ..."]
+  - name: register-api-key
+    image: curlimages/curl
+    command: ['sh', '-c', 'curl -X POST http://api:3000/api/servers ...']
 ```
 
 **For CI/CD:**
+
 ```yaml
 # GitHub Actions example
 - name: Create API Key
@@ -71,13 +79,13 @@ initContainers:
 
 ### 4. Key Files and Locations
 
-| File/Location | Purpose |
-|---------------|---------|
-| `src/middleware/auth.ts:110` | `generateApiKey()` function |
-| `src/routes/servers.ts:45` | POST endpoint to register servers |
-| `src/db/schema.ts:52-66` | `servers` table schema |
-| `./content.db` | SQLite database storing API keys |
-| `examples/` | Automation scripts for creating keys |
+| File/Location                | Purpose                              |
+| ---------------------------- | ------------------------------------ |
+| `src/middleware/auth.ts:110` | `generateApiKey()` function          |
+| `src/routes/servers.ts:45`   | POST endpoint to register servers    |
+| `src/db/schema.ts:52-66`     | `servers` table schema               |
+| `./content.db`               | SQLite database storing API keys     |
+| `examples/`                  | Automation scripts for creating keys |
 
 ### 5. Complete Documentation
 
@@ -89,21 +97,25 @@ initContainers:
 ## Quick Reference
 
 ### Create First Key
+
 ```bash
 npm run create-api-key
 ```
 
 ### Use the Key
+
 ```bash
 curl -H "X-API-Key: your-key-here" http://localhost:3000/api/sync/directories
 ```
 
 ### View All Keys
+
 ```bash
 curl http://localhost:3000/api/servers
 ```
 
 ### Update a Key
+
 ```bash
 curl -X PUT http://localhost:3000/api/servers/1 \
   -H "Content-Type: application/json" \
@@ -111,20 +123,21 @@ curl -X PUT http://localhost:3000/api/servers/1 \
 ```
 
 ### Delete a Key
+
 ```bash
 curl -X DELETE http://localhost:3000/api/servers/1
 ```
 
 ## API Endpoints
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/servers` | Create server & get API key | No |
-| GET | `/api/servers` | List all servers | No |
-| GET | `/api/servers/:id` | Get server details | No |
-| PUT | `/api/servers/:id` | Update server/key | No |
-| DELETE | `/api/servers/:id` | Delete server | No |
-| POST | `/api/servers/:id/ping` | Test connection | No |
+| Method | Endpoint                | Description                 | Auth Required |
+| ------ | ----------------------- | --------------------------- | ------------- |
+| POST   | `/api/servers`          | Create server & get API key | No            |
+| GET    | `/api/servers`          | List all servers            | No            |
+| GET    | `/api/servers/:id`      | Get server details          | No            |
+| PUT    | `/api/servers/:id`      | Update server/key           | No            |
+| DELETE | `/api/servers/:id`      | Delete server               | No            |
+| POST   | `/api/servers/:id/ping` | Test connection             | No            |
 
 **Note:** Server management endpoints don't require authentication to allow bootstrapping. Secure these in production (firewall/VPN).
 
@@ -136,7 +149,7 @@ curl -X DELETE http://localhost:3000/api/servers/1
 ✅ **Multiple languages** - Examples in JS, Python, Bash  
 ✅ **Container-ready** - Easy to integrate with Docker/K8s  
 ✅ **CI/CD friendly** - Scripts for automation pipelines  
-✅ **No manual DB access** - Everything via API  
+✅ **No manual DB access** - Everything via API
 
 ## Response Example
 
@@ -170,6 +183,7 @@ curl -X DELETE http://localhost:3000/api/servers/1
 6. **[CLAUDE.md](./CLAUDE.md)** - Development guide (existing)
 
 All documentation is now comprehensive and includes:
+
 - How to get API keys
 - How to use them
 - How to automate creation
@@ -181,6 +195,6 @@ All documentation is now comprehensive and includes:
 
 **Questions answered?** ✅  
 **Documentation created?** ✅  
-**Automation ready?** ✅  
+**Automation ready?** ✅
 
 **Next step:** Run `npm run create-api-key` and start syncing! 🚀

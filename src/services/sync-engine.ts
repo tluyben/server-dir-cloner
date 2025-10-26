@@ -3,7 +3,12 @@ import { mkdir, unlink, rmdir, readdir, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { db, syncDirectories, syncFiles, syncLogs } from '../db/index.js';
 import { eq } from 'drizzle-orm';
-import { calculateFileChecksum, getFileMetadata } from '../utils/checksum.js';
+import {
+  calculateFileChecksum,
+  getCompleteFileMetadata,
+  getDirectoryMetadata,
+} from '../utils/checksum.js';
+import { applyFileMetadata } from '../utils/permissions.js';
 import { createServerClient } from './server-client.js';
 import { watcherService } from './watcher.js';
 import type { SyncAction, SyncOperationResult } from '../types/sync.js';
@@ -51,7 +56,15 @@ export class SyncEngine {
     // Send all directories first
     for (const dir of walkResult.directories) {
       try {
-        await client.sendFileOperation(syncDirId, 'mkdir', dir);
+        const fullPath = join(syncDir.localPath, dir);
+        const dirMetadata = await getDirectoryMetadata(fullPath);
+
+        await client.sendFileOperation(syncDirId, 'mkdir', dir, undefined, undefined, {
+          mode: dirMetadata.mode,
+          uid: dirMetadata.uid,
+          gid: dirMetadata.gid,
+          mtime: dirMetadata.mtime.toISOString(),
+        });
         directoriesSync++;
       } catch (error) {
         console.error(`Failed to sync directory ${dir}:`, error);
@@ -62,9 +75,14 @@ export class SyncEngine {
     for (const file of walkResult.files) {
       try {
         const fullPath = join(syncDir.localPath, file);
-        const metadata = await getFileMetadata(fullPath);
+        const metadata = await getCompleteFileMetadata(fullPath);
 
-        await client.sendFileOperation(syncDirId, 'create', file, fullPath, metadata.checksum);
+        await client.sendFileOperation(syncDirId, 'create', file, fullPath, metadata.checksum, {
+          mode: metadata.mode,
+          uid: metadata.uid,
+          gid: metadata.gid,
+          mtime: metadata.mtime.toISOString(),
+        });
 
         filesSync++;
         bytesTransferred += metadata.size;
@@ -132,6 +150,12 @@ export class SyncEngine {
     filePath: string,
     fileBuffer?: Buffer,
     checksum?: string,
+    metadata?: {
+      mode?: number;
+      uid?: number;
+      gid?: number;
+      mtime?: string;
+    },
   ): Promise<SyncOperationResult> {
     const startTime = Date.now();
 
@@ -177,6 +201,14 @@ export class SyncEngine {
             }
           }
 
+          // Apply file metadata (permissions, ownership, mtime)
+          if (metadata) {
+            const metadataResult = await applyFileMetadata(fullPath, metadata);
+            if (metadataResult.errors.length > 0) {
+              console.warn(`Metadata application warnings for ${fullPath}:`, metadataResult.errors);
+            }
+          }
+
           console.log(`${action} file: ${fullPath}`);
           break;
         }
@@ -190,6 +222,15 @@ export class SyncEngine {
 
         case 'mkdir':
           await mkdir(fullPath, { recursive: true });
+
+          // Apply directory metadata (permissions, ownership, mtime)
+          if (metadata) {
+            const metadataResult = await applyFileMetadata(fullPath, metadata);
+            if (metadataResult.errors.length > 0) {
+              console.warn(`Metadata application warnings for ${fullPath}:`, metadataResult.errors);
+            }
+          }
+
           console.log(`Created directory: ${fullPath}`);
           break;
 
@@ -214,6 +255,10 @@ export class SyncEngine {
           status: 'success',
           fileSize,
           checksum,
+          fileMode: metadata?.mode,
+          fileUid: metadata?.uid,
+          fileGid: metadata?.gid,
+          fileMtime: metadata?.mtime,
           processingTimeMs: processingTime,
         })
         .returning();
@@ -293,12 +338,34 @@ export class SyncEngine {
 
       let checksum: string | undefined;
       let fileSize: number | undefined;
+      let metadata:
+        | {
+            mode: number;
+            uid: number;
+            gid: number;
+            mtime: string;
+          }
+        | undefined;
 
       // Get file metadata for create/update operations
       if ((action === 'create' || action === 'update') && existsSync(fullPath)) {
-        const metadata = await getFileMetadata(fullPath);
-        checksum = metadata.checksum;
-        fileSize = metadata.size;
+        const completeMetadata = await getCompleteFileMetadata(fullPath);
+        checksum = completeMetadata.checksum;
+        fileSize = completeMetadata.size;
+        metadata = {
+          mode: completeMetadata.mode,
+          uid: completeMetadata.uid,
+          gid: completeMetadata.gid,
+          mtime: completeMetadata.mtime.toISOString(),
+        };
+      } else if (action === 'mkdir' && existsSync(fullPath)) {
+        const dirMetadata = await getDirectoryMetadata(fullPath);
+        metadata = {
+          mode: dirMetadata.mode,
+          uid: dirMetadata.uid,
+          gid: dirMetadata.gid,
+          mtime: dirMetadata.mtime.toISOString(),
+        };
       }
 
       // Send to remote server
@@ -308,6 +375,7 @@ export class SyncEngine {
         filePath,
         fullPath,
         checksum,
+        metadata,
       );
 
       const processingTime = Date.now() - startTime;
@@ -321,6 +389,10 @@ export class SyncEngine {
         status: 'success',
         fileSize,
         checksum,
+        fileMode: metadata?.mode,
+        fileUid: metadata?.uid,
+        fileGid: metadata?.gid,
+        fileMtime: metadata?.mtime,
         processingTimeMs: processingTime,
       });
 
@@ -389,8 +461,8 @@ export class SyncEngine {
     // Create server client
     const client = await createServerClient(syncFile.remoteServerId);
 
-    // Get file metadata
-    const metadata = await getFileMetadata(syncFile.filePath);
+    // Get complete file metadata
+    const metadata = await getCompleteFileMetadata(syncFile.filePath);
 
     // Send file to remote
     await client.sendFileSyncOperation(
@@ -399,6 +471,12 @@ export class SyncEngine {
       basename(syncFile.filePath),
       syncFile.filePath,
       metadata.checksum,
+      {
+        mode: metadata.mode,
+        uid: metadata.uid,
+        gid: metadata.gid,
+        mtime: metadata.mtime.toISOString(),
+      },
     );
 
     bytesTransferred = metadata.size;
@@ -426,6 +504,12 @@ export class SyncEngine {
     action: SyncAction,
     fileBuffer?: Buffer,
     checksum?: string,
+    metadata?: {
+      mode?: number;
+      uid?: number;
+      gid?: number;
+      mtime?: string;
+    },
   ): Promise<SyncOperationResult> {
     const startTime = Date.now();
 
@@ -479,6 +563,14 @@ export class SyncEngine {
             }
           }
 
+          // Apply file metadata (permissions, ownership, mtime)
+          if (metadata) {
+            const metadataResult = await applyFileMetadata(fullPath, metadata);
+            if (metadataResult.errors.length > 0) {
+              console.warn(`Metadata application warnings for ${fullPath}:`, metadataResult.errors);
+            }
+          }
+
           console.log(`${action} file: ${fullPath}`);
           break;
         }
@@ -519,6 +611,10 @@ export class SyncEngine {
           status: 'success',
           fileSize,
           checksum,
+          fileMode: metadata?.mode,
+          fileUid: metadata?.uid,
+          fileGid: metadata?.gid,
+          fileMtime: metadata?.mtime,
           processingTimeMs: processingTime,
         })
         .returning();
@@ -599,12 +695,26 @@ export class SyncEngine {
 
       let checksum: string | undefined;
       let fileSize: number | undefined;
+      let metadata:
+        | {
+            mode: number;
+            uid: number;
+            gid: number;
+            mtime: string;
+          }
+        | undefined;
 
-      // Get file metadata for create/update operations
+      // Get complete file metadata for create/update operations
       if ((action === 'create' || action === 'update') && existsSync(fullPath)) {
-        const metadata = await getFileMetadata(fullPath);
-        checksum = metadata.checksum;
-        fileSize = metadata.size;
+        const completeMetadata = await getCompleteFileMetadata(fullPath);
+        checksum = completeMetadata.checksum;
+        fileSize = completeMetadata.size;
+        metadata = {
+          mode: completeMetadata.mode,
+          uid: completeMetadata.uid,
+          gid: completeMetadata.gid,
+          mtime: completeMetadata.mtime.toISOString(),
+        };
       }
 
       // Send to remote server
@@ -614,6 +724,7 @@ export class SyncEngine {
         fileName,
         fullPath,
         checksum,
+        metadata,
       );
 
       const processingTime = Date.now() - startTime;
@@ -628,6 +739,10 @@ export class SyncEngine {
         status: 'success',
         fileSize,
         checksum,
+        fileMode: metadata?.mode,
+        fileUid: metadata?.uid,
+        fileGid: metadata?.gid,
+        fileMtime: metadata?.mtime,
         processingTimeMs: processingTime,
       });
 

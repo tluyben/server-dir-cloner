@@ -11,6 +11,7 @@ A distributed server application that automatically synchronizes directories and
 - **Real-Time Monitoring**: Filesystem watchers detect changes as they happen
 - **Individual File Sync**: Sync specific files (e.g., `/home/user/config.json`) without syncing entire directories
 - **Smart File Monitoring**: Files don't need to exist yet - monitor parent directory and sync when file appears
+- **Complete Metadata Sync**: Preserves file permissions, ownership (UID/GID), and modification times
 - **Resilient**: Handles network failures with automatic retry and queue management
 - **Secure**: API key authentication for all inter-server communication
 - **Auditable**: Every operation is logged to SQLite database
@@ -91,11 +92,13 @@ npm run create-api-key
 ```
 
 This will:
+
 - Register a server in the database
 - Generate a secure 64-character API key
 - Save it to `.env.local` for convenience
 
 **Output:**
+
 ```
 ✅ Server registered successfully!
 🔐 API Key: d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5
@@ -201,6 +204,7 @@ curl -X POST http://localhost:3000/api/servers \
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -227,12 +231,13 @@ npm run create-api-key
 #### For Production/Automation
 
 **Node.js:**
+
 ```javascript
 import axios from 'axios';
 
 const response = await axios.post('http://localhost:3000/api/servers', {
   name: 'Production Server',
-  url: 'http://prod-server.example.com:3000'
+  url: 'http://prod-server.example.com:3000',
 });
 
 const apiKey = response.data.apiKey;
@@ -241,6 +246,7 @@ console.log('API Key:', apiKey);
 ```
 
 **Python:**
+
 ```python
 import requests
 
@@ -254,6 +260,7 @@ print(f'API Key: {api_key}')
 ```
 
 **Shell Script (CI/CD):**
+
 ```bash
 API_KEY=$(curl -s -X POST http://localhost:3000/api/servers \
   -H "Content-Type: application/json" \
@@ -275,16 +282,19 @@ curl -H "X-API-Key: your-api-key-here" \
 ### Managing API Keys
 
 **View all servers and their API keys:**
+
 ```bash
 curl http://localhost:3000/api/servers
 ```
 
 **View specific server:**
+
 ```bash
 curl http://localhost:3000/api/servers/1
 ```
 
 **Update API key:**
+
 ```bash
 curl -X PUT http://localhost:3000/api/servers/1 \
   -H "Content-Type: application/json" \
@@ -292,6 +302,7 @@ curl -X PUT http://localhost:3000/api/servers/1 \
 ```
 
 **Deactivate server (without deleting):**
+
 ```bash
 curl -X PUT http://localhost:3000/api/servers/1 \
   -H "Content-Type: application/json" \
@@ -299,6 +310,7 @@ curl -X PUT http://localhost:3000/api/servers/1 \
 ```
 
 **Delete server:**
+
 ```bash
 curl -X DELETE http://localhost:3000/api/servers/1
 ```
@@ -310,6 +322,7 @@ Note: Servers with active sync directories cannot be deleted.
 For management systems, containers, or CI/CD pipelines, the API provides programmatic access.
 
 **Docker Example:**
+
 ```dockerfile
 FROM node:18
 WORKDIR /app
@@ -342,28 +355,28 @@ See **[API_KEY_GUIDE.md](./API_KEY_GUIDE.md)** for comprehensive documentation i
 
 ### Server Management (API Key Management)
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| `POST` | `/api/servers` | Register a new server and get API key | No |
-| `GET` | `/api/servers` | List all registered servers | No |
-| `GET` | `/api/servers/:id` | Get server details (including API key) | No |
-| `PUT` | `/api/servers/:id` | Update server configuration | No |
-| `DELETE` | `/api/servers/:id` | Delete server | No |
-| `POST` | `/api/servers/:id/ping` | Test server connection | No |
+| Method   | Endpoint                | Description                            | Auth Required |
+| -------- | ----------------------- | -------------------------------------- | ------------- |
+| `POST`   | `/api/servers`          | Register a new server and get API key  | No            |
+| `GET`    | `/api/servers`          | List all registered servers            | No            |
+| `GET`    | `/api/servers/:id`      | Get server details (including API key) | No            |
+| `PUT`    | `/api/servers/:id`      | Update server configuration            | No            |
+| `DELETE` | `/api/servers/:id`      | Delete server                          | No            |
+| `POST`   | `/api/servers/:id/ping` | Test server connection                 | No            |
 
 **Note:** Server management endpoints don't require authentication to enable initial bootstrapping. In production, secure these with firewall rules or VPN.
 
 ### Directory Synchronization (Requires X-API-Key Header)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/sync/directories` | Register directory for sync |
-| `GET` | `/api/sync/directories` | List all sync directories |
-| `GET` | `/api/sync/directories/:id` | Get sync directory details |
-| `PUT` | `/api/sync/directories/:id` | Update sync configuration |
-| `DELETE` | `/api/sync/directories/:id` | Remove sync directory |
-| `POST` | `/api/sync/files` | Upload file (internal sync operation) |
-| `GET` | `/api/sync/files` | Download file (internal sync operation) |
+| Method   | Endpoint                    | Description                             |
+| -------- | --------------------------- | --------------------------------------- |
+| `POST`   | `/api/sync/directories`     | Register directory for sync             |
+| `GET`    | `/api/sync/directories`     | List all sync directories               |
+| `GET`    | `/api/sync/directories/:id` | Get sync directory details              |
+| `PUT`    | `/api/sync/directories/:id` | Update sync configuration               |
+| `DELETE` | `/api/sync/directories/:id` | Remove sync directory                   |
+| `POST`   | `/api/sync/files`           | Upload file (internal sync operation)   |
+| `GET`    | `/api/sync/files`           | Download file (internal sync operation) |
 
 ### Example CRUD Endpoints (Included)
 
@@ -375,9 +388,9 @@ The project includes example endpoints for learning:
 
 ### Health Check
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health` | Server health status |
+| Method | Endpoint  | Description          |
+| ------ | --------- | -------------------- |
+| `GET`  | `/health` | Server health status |
 
 ## Usage Examples
 
@@ -396,6 +409,7 @@ curl -X POST http://localhost:3000/api/servers \
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -426,6 +440,7 @@ curl -X POST http://localhost:3000/api/sync/directories \
 ```
 
 **Response:**
+
 ```json
 {
   "id": 1,
@@ -496,12 +511,14 @@ curl http://localhost:3000/api/sync/directories/1/logs \
 ### Core Tables
 
 **servers** - Registered servers for synchronization
+
 - `id`, `serverId`, `name`, `url`
 - `apiKey` - Authentication key
 - `active`, `lastSeen`
 - `createdAt`, `updatedAt`
 
 **sync_directories** - Directories configured for sync
+
 - `id`, `localPath`, `remotePath`
 - `remoteServerId` (FK → servers)
 - `isLeader`, `syncDirection`, `status`
@@ -509,12 +526,14 @@ curl http://localhost:3000/api/sync/directories/1/logs \
 - `createdAt`, `updatedAt`
 
 **sync_logs** - Audit trail of all sync operations
+
 - `id`, `syncDirId`, `action`, `filePath`
 - `direction`, `status`, `errorMessage`
 - `fileSize`, `checksum`
 - `timestamp`, `processingTimeMs`
 
 **sync_queue** - Pending sync operations
+
 - `id`, `syncDirId`, `action`, `filePath`
 - `priority`, `attempts`, `maxAttempts`
 - `status`, `errorMessage`
@@ -530,42 +549,42 @@ curl http://localhost:3000/api/sync/directories/1/logs \
 
 ### Development & Build
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start development server with hot reload |
-| `npm run build` | Compile TypeScript to JavaScript |
-| `npm start` | Run production server |
-| `npm run check` | Run TypeScript, ESLint, Prettier checks |
-| `npm run lint` | Fix ESLint issues |
-| `npm run format` | Format code with Prettier |
-| `npm test` | Run all tests |
-| `npm run test:watch` | Run tests in watch mode |
-| `npm run test:coverage` | Run tests with coverage report |
+| Script                  | Description                              |
+| ----------------------- | ---------------------------------------- |
+| `npm run dev`           | Start development server with hot reload |
+| `npm run build`         | Compile TypeScript to JavaScript         |
+| `npm start`             | Run production server                    |
+| `npm run check`         | Run TypeScript, ESLint, Prettier checks  |
+| `npm run lint`          | Fix ESLint issues                        |
+| `npm run format`        | Format code with Prettier                |
+| `npm test`              | Run all tests                            |
+| `npm run test:watch`    | Run tests in watch mode                  |
+| `npm run test:coverage` | Run tests with coverage report           |
 
 ### Database
 
-| Script | Description |
-|--------|-------------|
+| Script                | Description                              |
+| --------------------- | ---------------------------------------- |
 | `npm run db:generate` | Generate database migrations from schema |
-| `npm run db:migrate` | Apply pending migrations |
-| `npm run db:push` | Push schema changes directly (dev only) |
-| `npm run db:studio` | Open Drizzle Studio database GUI |
+| `npm run db:migrate`  | Apply pending migrations                 |
+| `npm run db:push`     | Push schema changes directly (dev only)  |
+| `npm run db:studio`   | Open Drizzle Studio database GUI         |
 
 ### Local Administration
 
 **New!** Manage servers and sync directories without curl or API key hassle:
 
-| Script | Description |
-|--------|-------------|
+| Script                   | Description                        |
+| ------------------------ | ---------------------------------- |
 | `npm run create-api-key` | Create first API key interactively |
-| `npm run server:add` | Register a new server |
-| `npm run server:list` | List all registered servers |
-| `npm run server:remove` | Remove a server |
-| `npm run server:ping` | Test server connection |
-| `npm run sync:add` | Add directory for synchronization |
-| `npm run sync:list` | List all sync directories |
-| `npm run sync:remove` | Remove sync directory |
-| `npm run sync:status` | Show sync status and logs |
+| `npm run server:add`     | Register a new server              |
+| `npm run server:list`    | List all registered servers        |
+| `npm run server:remove`  | Remove a server                    |
+| `npm run server:ping`    | Test server connection             |
+| `npm run sync:add`       | Add directory for synchronization  |
+| `npm run sync:list`      | List all sync directories          |
+| `npm run sync:remove`    | Remove sync directory              |
+| `npm run sync:status`    | Show sync status and logs          |
 
 **See [SCRIPTS_GUIDE.md](./SCRIPTS_GUIDE.md) for detailed usage and examples.**
 
@@ -735,6 +754,7 @@ sudo systemctl status directory-cloner
 ### Multi-Server Setup
 
 **On Server A:**
+
 ```bash
 export SERVER_ID=server-a
 export SERVER_NAME="Server A"
@@ -742,6 +762,7 @@ npm start
 ```
 
 **On Server B:**
+
 ```bash
 export SERVER_ID=server-b
 export SERVER_NAME="Server B"
@@ -749,6 +770,7 @@ npm start
 ```
 
 **Register each server:**
+
 ```bash
 # From Server A, register Server B
 curl -X POST http://server-a:3000/api/servers \
@@ -762,6 +784,7 @@ curl -X POST http://server-b:3000/api/servers \
 ```
 
 **Start syncing:**
+
 ```bash
 curl -X POST http://server-a:3000/api/sync/directories \
   -H "Content-Type: application/json" \
@@ -819,25 +842,30 @@ npm run db:studio
 ### Common Issues
 
 **"Missing X-API-Key header"**
+
 - Ensure you include the header: `-H "X-API-Key: your-key"`
 - Verify the key exists: `curl http://localhost:3000/api/servers`
 
 **"Invalid API key"**
+
 - Check the key is correct (64 hex characters for auto-generated)
 - Verify server is active: `curl http://localhost:3000/api/servers/1`
 - Create new key: `npm run create-api-key`
 
 **"Cannot connect to remote server"**
+
 - Verify remote server URL is accessible
 - Check network connectivity between servers
 - Ensure remote server is running
 
 **"Database locked"**
+
 - Close Drizzle Studio if running
 - Restart the server
 - Check for hanging database connections
 
 **Sync not working**
+
 - Check filesystem watcher is active
 - Verify directory paths exist and are accessible
 - Review sync logs for errors
@@ -851,6 +879,7 @@ npm run db:studio
 - **[QUICK_START_API_KEYS.md](./QUICK_START_API_KEYS.md)** - 30-second API key guide
 - **[API_KEY_GUIDE.md](./API_KEY_GUIDE.md)** - Comprehensive API key management
 - **[FILE_SYNC_GUIDE.md](./FILE_SYNC_GUIDE.md)** - Individual file synchronization guide
+- **[PERMISSIONS_SYNC_GUIDE.md](./PERMISSIONS_SYNC_GUIDE.md)** - File permissions and ownership synchronization
 - **[SYNC_GUIDE.md](./SYNC_GUIDE.md)** - Directory synchronization guide (if available)
 - **[CLAUDE.md](./CLAUDE.md)** - Development guide for LLMs
 - **[PRD.md](./PRD.md)** - Product requirements document
@@ -873,6 +902,7 @@ MIT License - see LICENSE file for details
 ## Support
 
 For issues, questions, or feature requests:
+
 - Check existing documentation in the project
 - Review the database schema in `src/db/schema.ts`
 - Check authentication middleware in `src/middleware/auth.ts`
@@ -881,6 +911,7 @@ For issues, questions, or feature requests:
 ## Acknowledgments
 
 Built with modern best practices using:
+
 - Express 5.1.0 for robust API handling
 - Drizzle ORM for type-safe database operations
 - Chokidar for reliable filesystem watching

@@ -78,6 +78,62 @@ export async function getFileMetadata(filePath: string): Promise<{
 }
 
 /**
+ * Get complete file metadata including permissions, ownership, and timestamps
+ * @param filePath - Absolute path to the file
+ * @returns Promise resolving to complete file metadata
+ */
+export async function getCompleteFileMetadata(filePath: string): Promise<{
+  size: number;
+  checksum: string;
+  mtime: Date;
+  mode: number;
+  uid: number;
+  gid: number;
+}> {
+  const stats = await stat(filePath);
+
+  if (!stats.isFile()) {
+    throw new Error('Path is not a file');
+  }
+
+  const checksum = await calculateFileChecksum(filePath);
+
+  return {
+    size: stats.size,
+    checksum,
+    mtime: stats.mtime,
+    mode: stats.mode,
+    uid: stats.uid,
+    gid: stats.gid,
+  };
+}
+
+/**
+ * Get directory metadata including permissions and ownership
+ * @param dirPath - Absolute path to the directory
+ * @returns Promise resolving to directory metadata
+ */
+export async function getDirectoryMetadata(dirPath: string): Promise<{
+  mode: number;
+  uid: number;
+  gid: number;
+  mtime: Date;
+}> {
+  const stats = await stat(dirPath);
+
+  if (!stats.isDirectory()) {
+    throw new Error('Path is not a directory');
+  }
+
+  return {
+    mode: stats.mode,
+    uid: stats.uid,
+    gid: stats.gid,
+    mtime: stats.mtime,
+  };
+}
+
+/**
  * Extract hash from checksum string
  * @param checksum - Checksum in format "sha256:hash"
  * @returns Just the hash portion

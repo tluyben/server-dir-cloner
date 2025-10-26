@@ -95,10 +95,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   Note: Requires X-API-Key to be set. Create one with: npm run create-api-key
 `,
-      [
-        'node scripts/sync-remove.js --id 1',
-        'npm run sync:remove -- --id 1',
-      ],
+      ['node scripts/sync-remove.js --id 1', 'npm run sync:remove -- --id 1'],
     );
     process.exit(args.help ? 0 : 1);
   }

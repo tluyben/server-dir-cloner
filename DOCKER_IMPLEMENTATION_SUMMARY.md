@@ -245,8 +245,8 @@ Modify `docker-compose.yml` to mount additional directories:
 ```yaml
 volumes:
   - ./data:/data
-  - ./custom-sync:/custom-sync  # Add custom sync directory
-  - ./logs:/app/logs            # Add custom log directory
+  - ./custom-sync:/custom-sync # Add custom sync directory
+  - ./logs:/app/logs # Add custom log directory
 ```
 
 ### Port Customization
@@ -255,7 +255,7 @@ Change exposed ports in `docker-compose.yml`:
 
 ```yaml
 ports:
-  - "3001:3000"  # Host:Container
+  - '3001:3000' # Host:Container
 ```
 
 ## Testing the Setup
@@ -323,12 +323,12 @@ curl http://localhost:3001/health
 
 See `DOCKER.md` for comprehensive troubleshooting, but here are quick fixes:
 
-| Issue | Solution |
-|-------|----------|
-| Port already in use | `lsof -i :3000` and kill process, or change port |
-| Permission denied | `sudo chown -R $(id -u):$(id -g) ./data` |
-| Database locked | `docker-compose down && rm -f ./data/*.db-*` |
-| Build fails | `docker-compose build --no-cache` |
+| Issue                  | Solution                                                   |
+| ---------------------- | ---------------------------------------------------------- |
+| Port already in use    | `lsof -i :3000` and kill process, or change port           |
+| Permission denied      | `sudo chown -R $(id -u):$(id -g) ./data`                   |
+| Database locked        | `docker-compose down && rm -f ./data/*.db-*`               |
+| Build fails            | `docker-compose build --no-cache`                          |
 | Hot reload not working | Verify source mount: `docker-compose exec dev ls -la /app` |
 
 ## Next Steps
@@ -350,6 +350,7 @@ See `DOCKER.md` for comprehensive troubleshooting, but here are quick fixes:
 ## Support
 
 For Docker-specific issues:
+
 1. Check DOCKER.md troubleshooting section
 2. Verify docker-compose.yml configuration
 3. Review container logs: `docker-compose logs -f`

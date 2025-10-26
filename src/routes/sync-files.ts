@@ -237,7 +237,8 @@ router.post(
   handleMulterError,
   async (req: any, res: any, next: any) => {
     try {
-      const { syncFileId, action, fileName, checksum } = req.body;
+      const { syncFileId, action, fileName, checksum, fileMode, fileUid, fileGid, fileMtime } =
+        req.body;
 
       if (!syncFileId || !action || !fileName) {
         throw new AppError(400, 'Missing required fields: syncFileId, action, fileName');
@@ -258,12 +259,31 @@ router.post(
         }
       }
 
+      // Parse metadata if provided
+      const metadata:
+        | {
+            mode?: number;
+            uid?: number;
+            gid?: number;
+            mtime?: string;
+          }
+        | undefined =
+        fileMode || fileUid || fileGid || fileMtime
+          ? {
+              mode: fileMode ? parseInt(fileMode, 10) : undefined,
+              uid: fileUid ? parseInt(fileUid, 10) : undefined,
+              gid: fileGid ? parseInt(fileGid, 10) : undefined,
+              mtime: fileMtime,
+            }
+          : undefined;
+
       // Handle the operation
       const result = await syncEngine.handleIncomingFileOperation(
         syncFileIdNum,
         action,
         fileBuffer,
         checksum,
+        metadata,
       );
 
       // Ensure watcher is started (in case it stopped)

@@ -12,6 +12,7 @@ This directory contains example scripts demonstrating how to programmatically cr
 ### 1. JavaScript/Node.js (`create-first-api-key.js`)
 
 **Usage:**
+
 ```bash
 # Using npm script (recommended)
 npm run create-api-key
@@ -24,12 +25,14 @@ SERVER_NAME="MyServer" SERVER_URL="http://192.168.1.100:3000" node examples/crea
 ```
 
 **Requirements:**
+
 - Node.js 18+
 - axios package (already in dependencies)
 
 ### 2. Python (`create_first_api_key.py`)
 
 **Usage:**
+
 ```bash
 # Make executable and run
 chmod +x examples/create_first_api_key.py
@@ -43,12 +46,14 @@ SERVER_NAME="MyServer" SERVER_URL="http://192.168.1.100:3000" python3 examples/c
 ```
 
 **Requirements:**
+
 - Python 3.6+
 - requests package: `pip install requests`
 
 ### 3. Bash Shell (`create-first-api-key.sh`)
 
 **Usage:**
+
 ```bash
 # Make executable and run
 chmod +x examples/create-first-api-key.sh
@@ -62,11 +67,13 @@ SERVER_NAME="MyServer" SERVER_URL="http://192.168.1.100:3000" bash examples/crea
 ```
 
 **Requirements:**
+
 - bash shell
 - curl
 - jq (JSON processor)
 
 **Install jq:**
+
 ```bash
 # Ubuntu/Debian
 sudo apt-get install jq
@@ -82,11 +89,11 @@ sudo yum install jq
 
 All scripts support the following environment variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `API_URL` | Base URL of the API | `http://localhost:3000` |
-| `SERVER_NAME` | Name for the server | `Server-<timestamp>` |
-| `SERVER_URL` | URL where server is accessible | `http://localhost:3000` |
+| Variable      | Description                    | Default                 |
+| ------------- | ------------------------------ | ----------------------- |
+| `API_URL`     | Base URL of the API            | `http://localhost:3000` |
+| `SERVER_NAME` | Name for the server            | `Server-<timestamp>`    |
+| `SERVER_URL`  | URL where server is accessible | `http://localhost:3000` |
 
 ## Example Outputs
 
@@ -170,7 +177,7 @@ services:
   api:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=production
       - API_URL=http://localhost:3000
@@ -193,31 +200,31 @@ metadata:
   name: sync-server
 spec:
   initContainers:
-  - name: register-api-key
-    image: python:3.9
-    command:
-    - python3
-    - /scripts/create_first_api_key.py
-    env:
-    - name: API_URL
-      value: "http://management-api:3000"
-    - name: SERVER_NAME
-      valueFrom:
-        fieldRef:
-          fieldPath: metadata.name
-    - name: SERVER_URL
-      value: "http://$(POD_IP):3000"
-    volumeMounts:
-    - name: scripts
-      mountPath: /scripts
+    - name: register-api-key
+      image: python:3.9
+      command:
+        - python3
+        - /scripts/create_first_api_key.py
+      env:
+        - name: API_URL
+          value: 'http://management-api:3000'
+        - name: SERVER_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: SERVER_URL
+          value: 'http://$(POD_IP):3000'
+      volumeMounts:
+        - name: scripts
+          mountPath: /scripts
   containers:
-  - name: app
-    image: your-app:latest
-    # ... rest of container config
+    - name: app
+      image: your-app:latest
+      # ... rest of container config
   volumes:
-  - name: scripts
-    configMap:
-      name: api-key-scripts
+    - name: scripts
+      configMap:
+        name: api-key-scripts
 ```
 
 ### CI/CD Pipeline (GitHub Actions)
@@ -267,24 +274,24 @@ jobs:
   tasks:
     - name: Create API key
       uri:
-        url: "{{ api_url }}/api/servers"
+        url: '{{ api_url }}/api/servers'
         method: POST
         body_format: json
         body:
-          name: "{{ inventory_hostname }}"
-          url: "http://{{ ansible_default_ipv4.address }}:3000"
+          name: '{{ inventory_hostname }}'
+          url: 'http://{{ ansible_default_ipv4.address }}:3000'
         return_content: yes
       register: api_response
 
     - name: Save API key
       copy:
-        content: "X_API_KEY={{ api_response.json.apiKey }}"
+        content: 'X_API_KEY={{ api_response.json.apiKey }}'
         dest: /etc/sync-server/.env
         mode: '0600'
 
     - name: Display API key info
       debug:
-        msg: "API Key created for {{ api_response.json.name }}"
+        msg: 'API Key created for {{ api_response.json.name }}'
 ```
 
 ### Terraform
@@ -352,6 +359,7 @@ print(f'API Key: {api_key}')
 ### "Server with name already exists"
 
 Each server name must be unique. Either:
+
 - Delete the existing server
 - Use a different name
 - Let the script auto-generate a timestamped name
@@ -359,6 +367,7 @@ Each server name must be unique. Either:
 ### "Cannot connect to API server"
 
 Ensure:
+
 - The API server is running (`npm run dev`)
 - The API_URL is correct
 - No firewall blocking the connection
@@ -367,6 +376,7 @@ Ensure:
 ### "jq: command not found" (bash script)
 
 Install jq:
+
 ```bash
 # Ubuntu/Debian
 sudo apt-get install jq
@@ -378,6 +388,7 @@ brew install jq
 ### API key not in response
 
 This usually indicates:
+
 - API endpoint changed
 - Server error occurred
 - JSON parsing failed
@@ -403,6 +414,7 @@ To add more examples:
 ## Support
 
 For issues or questions:
+
 - Check the [API_KEY_GUIDE.md](../API_KEY_GUIDE.md)
 - Review server logs
 - Test with `curl` directly to isolate issues

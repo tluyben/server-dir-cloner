@@ -70,6 +70,12 @@ export class ServerClient {
     filePath: string,
     localFullPath?: string,
     checksum?: string,
+    metadata?: {
+      mode?: number;
+      uid?: number;
+      gid?: number;
+      mtime?: string;
+    },
   ): Promise<{
     success: boolean;
     action: SyncAction;
@@ -85,6 +91,22 @@ export class ServerClient {
 
     if (checksum) {
       formData.append('checksum', checksum);
+    }
+
+    // Add file metadata (permissions, ownership, mtime)
+    if (metadata) {
+      if (metadata.mode !== undefined) {
+        formData.append('fileMode', metadata.mode.toString());
+      }
+      if (metadata.uid !== undefined) {
+        formData.append('fileUid', metadata.uid.toString());
+      }
+      if (metadata.gid !== undefined) {
+        formData.append('fileGid', metadata.gid.toString());
+      }
+      if (metadata.mtime) {
+        formData.append('fileMtime', metadata.mtime);
+      }
     }
 
     // Attach file for create/update operations
@@ -137,6 +159,12 @@ export class ServerClient {
     fileName: string,
     localFullPath?: string,
     checksum?: string,
+    metadata?: {
+      mode?: number;
+      uid?: number;
+      gid?: number;
+      mtime?: string;
+    },
   ): Promise<{
     success: boolean;
     action: SyncAction;
@@ -152,6 +180,22 @@ export class ServerClient {
 
     if (checksum) {
       formData.append('checksum', checksum);
+    }
+
+    // Add file metadata (permissions, ownership, mtime)
+    if (metadata) {
+      if (metadata.mode !== undefined) {
+        formData.append('fileMode', metadata.mode.toString());
+      }
+      if (metadata.uid !== undefined) {
+        formData.append('fileUid', metadata.uid.toString());
+      }
+      if (metadata.gid !== undefined) {
+        formData.append('fileGid', metadata.gid.toString());
+      }
+      if (metadata.mtime) {
+        formData.append('fileMtime', metadata.mtime);
+      }
     }
 
     // Attach file for create/update operations

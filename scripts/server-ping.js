@@ -83,10 +83,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     --id <number>       Server ID (required)
     --help              Show this help message
 `,
-      [
-        'node scripts/server-ping.js --id 1',
-        'npm run server:ping -- --id 1',
-      ],
+      ['node scripts/server-ping.js --id 1', 'npm run server:ping -- --id 1'],
     );
     process.exit(args.help ? 0 : 1);
   }

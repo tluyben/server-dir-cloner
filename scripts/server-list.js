@@ -74,7 +74,9 @@ async function listServers(detailed = false) {
             console.log('');
             console.log('  Sync Directories:');
             detail.syncs.forEach((sync, idx) => {
-              console.log(`    ${idx + 1}. ${sync.localPath} → ${sync.remotePath} (${sync.status})`);
+              console.log(
+                `    ${idx + 1}. ${sync.localPath} → ${sync.remotePath} (${sync.status})`,
+              );
             });
           }
         }
@@ -103,11 +105,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     --detailed          Show detailed information including API keys and syncs
     --help              Show this help message
 `,
-      [
-        'node scripts/server-list.js',
-        'npm run server:list',
-        'npm run server:list -- --detailed',
-      ],
+      ['node scripts/server-list.js', 'npm run server:list', 'npm run server:list -- --detailed'],
     );
     process.exit(0);
   }

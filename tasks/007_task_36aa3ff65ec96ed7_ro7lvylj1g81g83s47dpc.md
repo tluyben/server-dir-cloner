@@ -1,15 +1,16 @@
 You are an expert all-round developer who knows everything about Next.js, TypeScript, Drizzle, SQLite, HTML5, and React. Study the current project and implement the following feature:
 
-Task: Create a docker-compose for this 
+Task: Create a docker-compose for this
 
 Description:
+
 <p>Create an easy to use docker-compose and docker for this and document it </p>
 
 Type: Program
 Priority: medium
 
+IMPORTANT:
 
-IMPORTANT: 
 - Study the project's CLAUDE.md and README.md for conventions and standards
 - Follow all existing patterns and best practices in the codebase
 - Ensure TypeScript strict compliance

@@ -241,7 +241,7 @@ export function printUsage(scriptName, usage, examples = []) {
 
   if (examples.length > 0) {
     header('Examples');
-    examples.forEach(example => {
+    examples.forEach((example) => {
       print(`  ${example}`, 'dim');
     });
   }

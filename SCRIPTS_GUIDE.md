@@ -57,17 +57,20 @@ npm run sync:status -- --id 1 --logs
 Register a remote server in the synchronization network.
 
 **Usage:**
+
 ```bash
 npm run server:add -- --name "Server Name" --url "http://server.example.com:3000"
 ```
 
 **Options:**
+
 - `--name <string>` - Server name (required)
 - `--url <url>` - Server URL including port (required)
 - `--apiKey <string>` - Custom API key (optional, auto-generated if not provided)
 - `--help` - Show help message
 
 **Examples:**
+
 ```bash
 # Add a production server
 npm run server:add -- --name "Production" --url "http://192.168.1.100:3000"
@@ -77,6 +80,7 @@ npm run server:add -- --name "Backup" --url "https://backup.example.com:3000" --
 ```
 
 **Output:**
+
 ```
 Adding New Server
 ────────────────────────────────────────────────────────
@@ -103,16 +107,19 @@ Created:             10/25/2025, 12:00:00 PM
 View all servers in the synchronization network.
 
 **Usage:**
+
 ```bash
 npm run server:list
 npm run server:list -- --detailed
 ```
 
 **Options:**
+
 - `--detailed` - Show detailed information including API keys and active syncs
 - `--help` - Show help message
 
 **Examples:**
+
 ```bash
 # List all servers
 npm run server:list
@@ -122,6 +129,7 @@ npm run server:list -- --detailed
 ```
 
 **Output:**
+
 ```
 Registered Servers (2)
 ────────────────────────────────────────────────────────
@@ -152,26 +160,31 @@ Updated:             10/25/2025, 1:00:00 PM
 Remove a server from the synchronization network.
 
 **Usage:**
+
 ```bash
 npm run server:remove -- --id <server-id>
 ```
 
 **Options:**
+
 - `--id <number>` - Server ID (required)
 - `--help` - Show help message
 
 **Examples:**
+
 ```bash
 # Remove server with ID 1
 npm run server:remove -- --id 1
 ```
 
 **Important Notes:**
+
 - Servers with active sync directories **cannot be removed**
 - You must remove all associated sync directories first
 - This action cannot be undone
 
 **Output:**
+
 ```
 Server Details
 ────────────────────────────────────────────────────────
@@ -189,21 +202,25 @@ URL:                 http://192.168.1.100:3000
 Test connectivity to a registered server.
 
 **Usage:**
+
 ```bash
 npm run server:ping -- --id <server-id>
 ```
 
 **Options:**
+
 - `--id <number>` - Server ID (required)
 - `--help` - Show help message
 
 **Examples:**
+
 ```bash
 # Test connection to server 1
 npm run server:ping -- --id 1
 ```
 
 **Output:**
+
 ```
 Testing Connection to Server #1
 ────────────────────────────────────────────────────────
@@ -226,20 +243,24 @@ Test Time:           10/25/2025, 2:30:00 PM
 Configure a directory for automatic synchronization with one or more target servers.
 
 **Usage:**
+
 ```bash
 npm run sync:add -- --directory "/path/to/dir" --targets "Server1,Server2"
 ```
 
 **Options:**
+
 - `--directory <path>` - Local directory path (required)
 - `--targets <names>` - Comma-separated target server names (required)
 - `--help` - Show help message
 
 **Prerequisites:**
+
 - API key must be configured (run `npm run create-api-key`)
 - Target servers must be registered (use `server:add`)
 
 **Examples:**
+
 ```bash
 # Sync a directory to one server
 npm run sync:add -- --directory "/home/data" --targets "Production"
@@ -249,6 +270,7 @@ npm run sync:add -- --directory "/var/www/uploads" --targets "Production,Backup"
 ```
 
 **Output:**
+
 ```
 Adding Directory for Synchronization
 ────────────────────────────────────────────────────────
@@ -278,19 +300,23 @@ Target Servers:
 View all active directory synchronization configurations.
 
 **Usage:**
+
 ```bash
 npm run sync:list
 npm run sync:list -- --detailed
 ```
 
 **Options:**
+
 - `--detailed` - Show detailed information including server details and statistics
 - `--help` - Show help message
 
 **Prerequisites:**
+
 - API key must be configured
 
 **Examples:**
+
 ```bash
 # List all syncs
 npm run sync:list
@@ -300,6 +326,7 @@ npm run sync:list -- --detailed
 ```
 
 **Output:**
+
 ```
 Active Sync Directories (2)
 ────────────────────────────────────────────────────────
@@ -324,29 +351,35 @@ Created:             10/25/2025, 12:00:00 PM
 Stop synchronization for a directory (files are not deleted).
 
 **Usage:**
+
 ```bash
 npm run sync:remove -- --id <sync-id>
 ```
 
 **Options:**
+
 - `--id <number>` - Sync directory ID (required)
 - `--help` - Show help message
 
 **Prerequisites:**
+
 - API key must be configured
 
 **Important Notes:**
+
 - This **stops synchronization only** - no files are deleted
 - Files remain on both servers but will no longer sync
 - You can re-add the directory later if needed
 
 **Examples:**
+
 ```bash
 # Remove sync directory 1
 npm run sync:remove -- --id 1
 ```
 
 **Output:**
+
 ```
 Sync Directory Details
 ────────────────────────────────────────────────────────
@@ -372,6 +405,7 @@ Remote Server:       Production
 Display detailed status and recent operation logs for a sync directory.
 
 **Usage:**
+
 ```bash
 npm run sync:status -- --id <sync-id>
 npm run sync:status -- --id <sync-id> --logs
@@ -379,15 +413,18 @@ npm run sync:status -- --id <sync-id> --logs --limit 50
 ```
 
 **Options:**
+
 - `--id <number>` - Sync directory ID (required)
 - `--logs` - Show recent sync operation logs
 - `--limit <number>` - Number of log entries to show (default: 20)
 - `--help` - Show help message
 
 **Prerequisites:**
+
 - API key must be configured
 
 **Examples:**
+
 ```bash
 # Show basic status
 npm run sync:status -- --id 1
@@ -400,6 +437,7 @@ npm run sync:status -- --id 1 --logs --limit 50
 ```
 
 **Output:**
+
 ```
 Sync Directory Status
 ────────────────────────────────────────────────────────
@@ -536,6 +574,7 @@ Scripts support the following environment variables:
 - `X_API_KEY` - API key for authentication (loaded from `.env.local` if not set)
 
 **Example:**
+
 ```bash
 API_URL=http://production.example.com:3000 npm run server:list
 ```
@@ -578,6 +617,7 @@ chmod +x scripts/*.js
 **Problem:** Script can't reach the API server.
 
 **Solutions:**
+
 1. Ensure the server is running: `npm run dev`
 2. Check the API URL: `echo $API_URL`
 3. Verify the port is correct (default: 3000)
@@ -587,6 +627,7 @@ chmod +x scripts/*.js
 **Problem:** Scripts requiring authentication can't find an API key.
 
 **Solutions:**
+
 1. Create an API key: `npm run create-api-key`
 2. Check `.env.local` exists and contains `X_API_KEY`
 3. Set environment variable: `export X_API_KEY="your-key"`
@@ -596,6 +637,7 @@ chmod +x scripts/*.js
 **Problem:** Attempting to add a server with a duplicate name.
 
 **Solutions:**
+
 1. Use a different name
 2. View existing servers: `npm run server:list`
 3. Remove the old server first (if appropriate)
@@ -605,6 +647,7 @@ chmod +x scripts/*.js
 **Problem:** Trying to remove a server that has active syncs.
 
 **Solutions:**
+
 1. List sync directories: `npm run sync:list`
 2. Remove syncs first: `npm run sync:remove -- --id <id>`
 3. Then remove server: `npm run server:remove -- --id <id>`
@@ -614,6 +657,7 @@ chmod +x scripts/*.js
 **Problem:** Scripts can't access directories or files.
 
 **Solutions:**
+
 1. Check directory permissions
 2. Run with appropriate user privileges
 3. Ensure script files are executable: `chmod +x scripts/*.js`
