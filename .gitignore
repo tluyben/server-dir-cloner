@@ -62,6 +62,7 @@ tmp/
 /complete_tasks/
 /dbackups/
 /sub_tasks/
+/tasks/
 /tasks/pointer
 /claude4ever
 /docker-compose.claude.yml
