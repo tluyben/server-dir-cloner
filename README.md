@@ -83,6 +83,24 @@ This will:
 
 See **[QUICK_START_API_KEYS.md](./QUICK_START_API_KEYS.md)** for a 30-second guide to API keys.
 
+### 6. Use Local Admin Scripts (No curl required!)
+
+Manage servers and syncs with simple commands:
+
+```bash
+# Add a remote server
+npm run server:add -- --name "Production" --url "http://192.168.1.100:3000"
+
+# Start syncing a directory
+npm run sync:add -- --directory "/home/data" --targets "Production"
+
+# Check sync status
+npm run sync:list
+npm run sync:status -- --id 1 --logs
+```
+
+See **[SCRIPTS_GUIDE.md](./SCRIPTS_GUIDE.md)** for complete documentation.
+
 ## How It Works
 
 ### Architecture Overview
@@ -487,6 +505,8 @@ curl http://localhost:3000/api/sync/directories/1/logs \
 
 ## Available Scripts
 
+### Development & Build
+
 | Script | Description |
 |--------|-------------|
 | `npm run dev` | Start development server with hot reload |
@@ -495,14 +515,36 @@ curl http://localhost:3000/api/sync/directories/1/logs \
 | `npm run check` | Run TypeScript, ESLint, Prettier checks |
 | `npm run lint` | Fix ESLint issues |
 | `npm run format` | Format code with Prettier |
+| `npm test` | Run all tests |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:coverage` | Run tests with coverage report |
+
+### Database
+
+| Script | Description |
+|--------|-------------|
 | `npm run db:generate` | Generate database migrations from schema |
 | `npm run db:migrate` | Apply pending migrations |
 | `npm run db:push` | Push schema changes directly (dev only) |
 | `npm run db:studio` | Open Drizzle Studio database GUI |
-| `npm test` | Run all tests |
-| `npm run test:watch` | Run tests in watch mode |
-| `npm run test:coverage` | Run tests with coverage report |
+
+### Local Administration
+
+**New!** Manage servers and sync directories without curl or API key hassle:
+
+| Script | Description |
+|--------|-------------|
 | `npm run create-api-key` | Create first API key interactively |
+| `npm run server:add` | Register a new server |
+| `npm run server:list` | List all registered servers |
+| `npm run server:remove` | Remove a server |
+| `npm run server:ping` | Test server connection |
+| `npm run sync:add` | Add directory for synchronization |
+| `npm run sync:list` | List all sync directories |
+| `npm run sync:remove` | Remove sync directory |
+| `npm run sync:status` | Show sync status and logs |
+
+**See [SCRIPTS_GUIDE.md](./SCRIPTS_GUIDE.md) for detailed usage and examples.**
 
 ## Technology Stack
 
@@ -781,6 +823,7 @@ npm run db:studio
 ## Documentation
 
 - **[README.md](./README.md)** (this file) - Project overview and quick start
+- **[SCRIPTS_GUIDE.md](./SCRIPTS_GUIDE.md)** - Local administration scripts guide (NEW!)
 - **[QUICK_START_API_KEYS.md](./QUICK_START_API_KEYS.md)** - 30-second API key guide
 - **[API_KEY_GUIDE.md](./API_KEY_GUIDE.md)** - Comprehensive API key management
 - **[SYNC_GUIDE.md](./SYNC_GUIDE.md)** - Directory synchronization guide (if available)

@@ -4,6 +4,9 @@ import prettierPlugin from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
 
 export default tseslint.config(
+  {
+    ignores: ['dist/', 'node_modules/', 'coverage/', '*.config.js', 'scripts/**/*.js', 'examples/**/*.js'],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   prettierConfig,
@@ -19,6 +22,5 @@ export default tseslint.config(
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-non-null-assertion': 'warn',
     },
-    ignores: ['dist/', 'node_modules/', 'coverage/', '*.config.js'],
   },
 );

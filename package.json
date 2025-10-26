@@ -18,7 +18,15 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
-    "create-api-key": "node examples/create-first-api-key.js"
+    "create-api-key": "node examples/create-first-api-key.js",
+    "server:add": "node scripts/server-add.js",
+    "server:list": "node scripts/server-list.js",
+    "server:remove": "node scripts/server-remove.js",
+    "server:ping": "node scripts/server-ping.js",
+    "sync:add": "node scripts/sync-add.js",
+    "sync:list": "node scripts/sync-list.js",
+    "sync:remove": "node scripts/sync-remove.js",
+    "sync:status": "node scripts/sync-status.js"
   },
   "keywords": [
     "express",
